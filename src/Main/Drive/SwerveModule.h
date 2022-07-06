@@ -9,6 +9,7 @@
 #include <units/velocity.h>
 #include <units/current.h>
 #include <wpi/numbers>
+#include <iostream>
 
 class SwerveModule : public Mechanism {
 public:

@@ -65,8 +65,7 @@ void Controls::doDrive() {
 
     // Improves the joystick axis to be smoother and easier to control.
     auto improveAxis = [](double axis) -> double {
-        double better = std::sin(axis * (wpi::numbers::pi / 2.0));
-        return std::pow(better, 1.4);
+        return std::sin(axis * (wpi::numbers::pi / 2.0));
     };
 
     if (std::fabs(xVel) > AXIS_DEADZONE) {
@@ -78,6 +77,10 @@ void Controls::doDrive() {
     if (std::fabs(angVel) > AXIS_DEADZONE) {
         finalAngVel = improveAxis(angVel);
     }
+
+    std::cout << "final x " << finalXVel << '\n';
+    std::cout << "final y " << finalYVel << '\n';
+    std::cout << "final rot " << finalAngVel << '\n';
 
     // Control the drivetrain.
     drive->manualControl(finalXVel, -finalYVel, finalAngVel, ctrlFlags);

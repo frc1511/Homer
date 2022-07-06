@@ -112,7 +112,9 @@ void SwerveModule::setState(frc::SwerveModuleState targetState) {
     // Optimize the target state by flipping motor directions and adjusting
     // rotations in order to turn the least amount of distance possible.
     frc::SwerveModuleState optimizedState;
-    
+
+    std::cout << "speeed " << targetState.speed.value() << '\n';
+
     // Turn off optimization in crater mode just to see what happens.
     if (settings.isCraterMode) {
         optimizedState = targetState;
@@ -178,6 +180,8 @@ void SwerveModule::setIdleMode(ThunderMotorController::IdleMode idleMode) {
 void SwerveModule::setDriveMotor(units::meters_per_second_t velocity) {
     // Convert meters per second into RPM.
     double rpm = velocity.value() * 60 * DRIVE_METER_TO_ENCODER_FACTOR;
+
+    std::cout << "rpm " << rpm << '\n';
 
     // Set the PID reference to the desired RPM.
     driveMotor.set(ThunderMotorController::ControlMode::VELOCITY, rpm);
