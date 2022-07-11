@@ -78,12 +78,8 @@ void Controls::doDrive() {
         finalAngVel = improveAxis(angVel);
     }
 
-    std::cout << "final x " << finalXVel << '\n';
-    std::cout << "final y " << finalYVel << '\n';
-    std::cout << "final rot " << finalAngVel << '\n';
-
     // Control the drivetrain.
-    drive->manualControl(finalXVel, -finalYVel, finalAngVel, ctrlFlags);
+    drive->manualControl(finalXVel, -finalYVel, -finalAngVel, ctrlFlags);
 }
 
 bool Controls::getShouldPersistConfig() {
@@ -99,6 +95,7 @@ void Controls::doAux() {
 
 void Controls::doSwitchPanel() {
     settings.isCraterMode = switchPanel.GetRawButton(1);
+    driveFieldCentric = switchPanel.GetRawButton(2);
 }
 
 void Controls::sendFeedback() {

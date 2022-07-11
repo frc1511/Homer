@@ -34,13 +34,13 @@ void Homer::DisabledPeriodic() { }
 
 void Homer::TestInit() {
     if (controls.getShouldPersistConfig()) {
-        puts("\033[34\033[1m*** Persistent configuration activating...\033[0m");
+        puts("*** Persistent configuration activating...");
         
         for (Mechanism* mech : allMechanisms) {
             mech->doPersistentConfiguration();
         }
         
-        puts("\033[34\033[1m*** Persistent configuration complete!\033[0m");
+        puts("*** Persistent configuration complete!");
     }
     
     reset(Mechanism::MatchMode::TEST);

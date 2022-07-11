@@ -4,7 +4,7 @@
 #define ENCODER_OFFSETS_FILE_NAME "/home/lvuser/magnetic_encoder_offsets.txt"
 
 // The maximum velocity during manual control.
-#define DRIVE_MANUAL_MAX_VELOCITY 4_mps
+#define DRIVE_MANUAL_MAX_VELOCITY 1_mps
 // The maximum angular velocity during manual control.
 #define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 90_deg_per_s
 
@@ -81,11 +81,9 @@ void Drive::process() {
 
     switch (driveMode) {
         case DriveMode::STOPPED:
-        std::cout << "stopped\n";
             execStopped();
             break;
         case DriveMode::MANUAL:
-        std::cout << "manual\n";
             execManual();
             break;
     }
@@ -223,7 +221,6 @@ void Drive::execManual() {
 }
 
 void Drive::makeBrick() {
-    std::cout << "making a brick\n";
     for (std::size_t i = 0; i < swerveModules.size(); i++) {
         units::degree_t angle;
         // If the index is even.
@@ -325,7 +322,6 @@ void Drive::setIdleMode(ThunderMotorController::IdleMode mode) {
 }
 
 void Drive::setModuleStates(frc::ChassisSpeeds speeds) {
-    std::cout << "module states " << speeds.vx.value() << ", " << speeds.vy.value() << ", " << speeds.omega.value() << '\n';
     // Generate module states using the chassis velocities. This is the magic
     // function of swerve drive.
     wpi::array<frc::SwerveModuleState, 4> moduleStates = kinematics.ToSwerveModuleStates(speeds);
