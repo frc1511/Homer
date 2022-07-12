@@ -36,7 +36,7 @@ public:
     void doPersistentConfiguration() override;
     void resetToMode(MatchMode mode) override;
 
-    enum ControlFlags {
+    enum ControlFlag {
         NONE = 0,
         FIELD_CENTRIC = 1 << 0,
         VICE_GRIP     = 1 << 1,
@@ -188,7 +188,7 @@ private:
         double xPct = 0;
         double yPct = 0;
         double angPct = 0;
-        unsigned flags = ControlFlags::NONE;
+        unsigned flags = ControlFlag::NONE;
     };
 
     // The data concerning manual control.

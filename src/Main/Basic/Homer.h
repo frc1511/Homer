@@ -5,6 +5,8 @@
 #include <Basic/Mechanism.h>
 #include <Control/Controls.h>
 #include <Drive/Drive.h>
+#include <Illumination/BlinkyBlinky.h>
+#include <Hardware/IOMap.h>
 #include <vector>
 #include <iostream>
 
@@ -29,9 +31,21 @@ private:
     void reset(Mechanism::MatchMode mode);
 
     Drive drive;
-    Controls controls { &drive };
+
+#ifndef TEST_BOARD
+    BlinkyBlinky blinkyBlinky;
+#endif
+
+    Controls controls { &drive,
+#ifndef TEST_BOARD
+        &blinkyBlinky,
+#endif
+    };
 
     std::vector<Mechanism*> allMechanisms {
-        &drive, &controls
+        &drive, &controls,
+#ifndef TEST_BOARD
+        &blinkyBlinky,
+#endif
     };
 };

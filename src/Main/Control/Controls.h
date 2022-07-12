@@ -3,10 +3,12 @@
 #include <Basic/Mechanism.h>
 #include <Hardware/HardwareManager.h>
 #include <Drive/Drive.h>
+#include <Hardware/IOMap.h>
+#include <Illumination/BlinkyBlinky.h>
 
 class Controls : public Mechanism {
 public:
-    Controls(Drive* drive);
+    Controls(Drive* drive, BlinkyBlinky* blinkyBlinky = nullptr);
     ~Controls();
     
     void process() override;
@@ -24,6 +26,8 @@ private:
     void doSwitchPanel();
 
     bool driveFieldCentric = false;
+    unsigned driveCtrlFlags = Drive::ControlFlag::NONE;
 
     Drive* drive;
+    BlinkyBlinky* blinkyBlinky;
 };

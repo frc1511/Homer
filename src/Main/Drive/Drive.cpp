@@ -91,11 +91,11 @@ void Drive::process() {
 
 void Drive::manualControl(double xPct, double yPct, double angPct, unsigned flags) {
     // Stop the robot in brick mode no matter what.
-    if (flags & ControlFlags::BRICK) {
+    if (flags & ControlFlag::BRICK) {
         driveMode = DriveMode::STOPPED;
     }
     // The robot is still doing stuff when vice gripping.
-    else if (flags & ControlFlags::VICE_GRIP) {
+    else if (flags & ControlFlag::VICE_GRIP) {
         driveMode = DriveMode::MANUAL;
     }
     // The robot isn't being told to do anything, sooo.... stop??
@@ -161,7 +161,7 @@ void Drive::execStopped() {
     setModuleStates({ 0_mps, 0_mps, 0_deg_per_s });
 
     // Put the drivetrain into brick mode if the flag is set.
-    if (manualData.flags & ControlFlags::BRICK) {
+    if (manualData.flags & ControlFlag::BRICK) {
         makeBrick();
     }
 }
@@ -175,7 +175,7 @@ void Drive::execManual() {
      * Vice grip allows for the robot to remain aligned with a vision target and ignore
      * manual angular velocity control.
      */
-    if (manualData.flags & ControlFlags::VICE_GRIP) {
+    if (manualData.flags & ControlFlag::VICE_GRIP) {
         // units::degree_t angleToTurn = -limelight->getAngleHorizontal();
         units::degree_t angleToTurn = 0_deg;
 
@@ -208,7 +208,7 @@ void Drive::execManual() {
     
     // Generate chassis speeds depending on the control mode.
 
-    if (manualData.flags & ControlFlags::FIELD_CENTRIC) {
+    if (manualData.flags & ControlFlag::FIELD_CENTRIC) {
         // Generate chassis speeds based on the rotation of the robot relative to the field.
         velocities = frc::ChassisSpeeds::FromFieldRelativeSpeeds(xVel, yVel, angVel, getRotation());
     }
@@ -353,7 +353,7 @@ void Drive::sendFeedback() {
     Feedback::sendDouble("Drive", "manual y%", manualData.yPct);
     Feedback::sendDouble("Drive", "manual angular%", manualData.angPct);
 
-    Feedback::sendBoolean("Drive", "field centric", manualData.flags & ControlFlags::FIELD_CENTRIC);
-    Feedback::sendBoolean("Drive", "vice grip", manualData.flags & ControlFlags::VICE_GRIP);
-    Feedback::sendBoolean("Drive", "brick", manualData.flags & ControlFlags::BRICK);
+    Feedback::sendBoolean("Drive", "field centric", manualData.flags & ControlFlag::FIELD_CENTRIC);
+    Feedback::sendBoolean("Drive", "vice grip", manualData.flags & ControlFlag::VICE_GRIP);
+    Feedback::sendBoolean("Drive", "brick", manualData.flags & ControlFlag::BRICK);
 }

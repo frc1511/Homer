@@ -2,12 +2,14 @@
 
 #include <Wrappers/GameController/PS4Controller.h>
 #include <Wrappers/GameController/XBoxController.h>
+#include <Wrappers/GameController/Empty.h>
 #include <Wrappers/MotorController/Rev/CANSparkMax.h>
 #include <Wrappers/MotorController/Empty.h>
 #include <Wrappers/MagneticEncoder/CTRE/CANCoder.h>
 #include <Wrappers/MagneticEncoder/CANEmpty.h>
 #include <Wrappers/IMU/ADIS16470IMU.h>
 #include <Wrappers/IMU/Empty.h>
+#include <Hardware/IOMap.h>
 
 class HardwareManager {
 public:
@@ -16,8 +18,8 @@ public:
 #ifdef TEST_BOARD
     using SwerveDriveMotor = ThunderMotorControllerEmpty;
     using SwerveTurningMotor = ThunderMotorControllerEmpty;
-    using SwerveTurningEncoder = ThunderCANMagneticEncoderEmpty;
-    using DriveIMU = thunder::IMUEmpty;
+    using SwerveTurningEncoder = ThudnerCANMagneticEncoderEmpty;
+    using DriveIMU = ThunderIMUEmpty;
 
 // Regular robot hardware.
 #else

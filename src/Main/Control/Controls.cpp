@@ -4,8 +4,8 @@
 
 #define AXIS_DEADZONE 0.1
 
-Controls::Controls(Drive* drive)
-: drive(drive) {
+Controls::Controls(Drive* drive, BlinkyBlinky* blinkyBlinky)
+: drive(drive), blinkyBlinky(blinkyBlinky) {
 
 }
 
@@ -31,18 +31,20 @@ void Controls::doDrive() {
     bool zeroRotation = driveController.getOptionsButton();
     bool calGyro = driveController.getShareButton();
 
-    unsigned ctrlFlags = Drive::ControlFlags::NONE;
+    bool wasBrickDrive = driveCtrlFlags & Drive::ControlFlag::BRICK;
+    
+    driveCtrlFlags = Drive::ControlFlag::NONE;
 
     if (driveFieldCentric) {
-        ctrlFlags |= Drive::ControlFlags::FIELD_CENTRIC;
+        driveCtrlFlags |= Drive::ControlFlag::FIELD_CENTRIC;
     }
 
     if (brickDrive) {
-        ctrlFlags |= Drive::ControlFlags::BRICK;
+        driveCtrlFlags |= Drive::ControlFlag::BRICK;
     }
 
     if (viceGrip) {
-        ctrlFlags |= Drive::ControlFlags::VICE_GRIP;
+        driveCtrlFlags |= Drive::ControlFlag::VICE_GRIP;
     }
 
     static bool whichCamera = false;
@@ -78,8 +80,17 @@ void Controls::doDrive() {
         finalAngVel = improveAxis(angVel);
     }
 
+    auto isMoving = [&]() -> bool {
+        return (driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) || finalXVel || finalYVel || finalAngVel;
+    };
+
+    // Stay in brick drive if set before and isn't moving.
+    if (wasBrickDrive && !isMoving()) {
+        driveCtrlFlags |= Drive::ControlFlag::BRICK;
+    }
+
     // Control the drivetrain.
-    drive->manualControl(finalXVel, -finalYVel, -finalAngVel, ctrlFlags);
+    drive->manualControl(finalXVel, -finalYVel, -finalAngVel, driveCtrlFlags);
 }
 
 bool Controls::getShouldPersistConfig() {
@@ -96,6 +107,30 @@ void Controls::doAux() {
 void Controls::doSwitchPanel() {
     settings.isCraterMode = switchPanel.GetRawButton(1);
     driveFieldCentric = switchPanel.GetRawButton(2);
+
+    if (blinkyBlinky) {
+        if (switchPanel.GetRawButton(3)) {
+            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::OFF);
+        }
+        else if (!drive->isIMUCalibrated()) {
+            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::CALIBRATING);
+        }
+        else if (getCurrentMode() == MatchMode::DISABLED) {
+            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::DISABLED);
+        }
+        else if (settings.isCraterMode) {
+            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::CRATER_MODE);
+        }
+        else if (driveCtrlFlags & Drive::ControlFlag::BRICK) {
+            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::BRICK);
+        }
+        else if (driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) {
+            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::VICE_GRIP);
+        }
+        else {
+            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::ALLIANCE);
+        }
+    }
 }
 
 void Controls::sendFeedback() {
