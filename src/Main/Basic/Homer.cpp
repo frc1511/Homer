@@ -1,15 +1,13 @@
 #include <Basic/Homer.h>
 #include <Basic/Mechanism.h>
 
+using namespace frc;
+
 void Homer::RobotInit() { }
 
 void Homer::RobotPeriodic() {
-    for (Mechanism* mech : allMechanisms) {
-        mech->sendFeedback();
-    }
-
 #ifndef TEST_BOARD
-    blinkyBlinky.process();
+    // blinkyBlinky.process();
 #endif
 }
 
@@ -39,14 +37,11 @@ void Homer::DisabledPeriodic() { }
 void Homer::TestInit() {
     if (controls.getShouldPersistConfig()) {
         puts("*** Persistent configuration activating...");
-        
         for (Mechanism* mech : allMechanisms) {
-            mech->doPersistentConfiguration();
+          mech->doPersistentConfiguration();
         }
-        
         puts("*** Persistent configuration complete!");
     }
-    
     reset(Mechanism::MatchMode::TEST);
 }
 

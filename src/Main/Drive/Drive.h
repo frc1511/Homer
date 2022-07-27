@@ -20,6 +20,7 @@
 #include <units/angular_acceleration.h>
 #include <array>
 #include <fstream>
+#include <frc/Timer.h>
 
 // The width of the robot.
 #define ROBOT_WIDTH 0.362_m
@@ -54,6 +55,8 @@ public:
      * Control flags are used to control the behavior of the drivetrain.
      */
     void manualControl(double xPct, double yPct, double angPct, unsigned flags);
+
+    void runTrajectory(const char* filename);
 
     // void runTrajectory(const thunder::Trajectory& trajectory);
 
@@ -102,6 +105,8 @@ private:
      * Executes process when the drivetrain is in manual control.
      */
     void execManual();
+
+    void execTrajectory();
 
     /**
      * Puts the drivetrain into brick mode (all modules turned towards the center).
@@ -179,6 +184,7 @@ private:
     enum class DriveMode {
         STOPPED,
         MANUAL,
+        TRAJECTORY,
     };
 
     // The current drive mode.
@@ -193,4 +199,18 @@ private:
 
     // The data concerning manual control.
     ManualControlData manualData {};
+
+    struct TrajectoryPoint {
+        float time;
+        float x_pos;
+        float y_pos;
+        float velocity;
+    };
+
+    std::vector<TrajectoryPoint> trajectoryPoints;
+
+    frc::Timer trajectoryTimer;
+
+    // Trevor thinks water game 2037
+    // Peter thinks water game 2028
 };

@@ -33,19 +33,19 @@ private:
     Drive drive;
 
 #ifndef TEST_BOARD
-    BlinkyBlinky blinkyBlinky;
+    // BlinkyBlinky blinkyBlinky;
 #endif
 
     Controls controls { &drive,
 #ifndef TEST_BOARD
-        &blinkyBlinky,
+        // &blinkyBlinky,
 #endif
     };
 
     std::vector<Mechanism*> allMechanisms {
         &drive, &controls,
 #ifndef TEST_BOARD
-        &blinkyBlinky,
+        // &blinkyBlinky,
 #endif
     };
 };

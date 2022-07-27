@@ -10,9 +10,19 @@
 #include <array>
 #include <map>
 
-#define LED_NUM_STRIP 40
+#define LED_NUM_STRIP 20
 #define NUM_STRIPS 4
-#define LED_NUM_TOTAL (NUM_STRIPS * LED_NUM_STRIP)
+#define LED_NUM_TOTAL 20//(NUM_STRIPS * LED_NUM_STRIP)
+// #define LED_NUM_TOTAL 40
+
+#define DEAD_1_START 40
+#define DEAD_1_END 55
+#define DEAD_2_START 65
+#define DEAD_2_END 80
+#define DEAD_3_START 120
+#define DEAD_3_END 135
+#define DEAD_4_START 145
+#define DEAD_4_END 160
 
 class BlinkyBlinky : public Mechanism {
 public:

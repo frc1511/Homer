@@ -49,6 +49,13 @@ void BlinkyBlinky::resetToMode(MatchMode mode) {
 }
 
 void BlinkyBlinky::process() {
+
+    // setColor(frc::Color::kNavy);
+
+    // strip.SetData(stripBuffer);
+
+
+    return;
     switch (ledMode) {
         case LEDMode::OFF:
             // Turn the LEDs off D:
@@ -97,8 +104,25 @@ void BlinkyBlinky::setLEDMode(LEDMode mode) {
     ledMode = mode;
 }
 
+#define DEAD_1_START 40
+#define DEAD_1_END 55
+#define DEAD_2_START 65
+#define DEAD_2_END 80
+#define DEAD_3_START 120
+#define DEAD_3_END 135
+#define DEAD_4_START 145
+#define DEAD_4_END 160
+
 void BlinkyBlinky::setPixel(std::size_t index, frc::Color color) {
-    stripBuffer[index].SetLED(color);
+    // if ((index >= DEAD_1_START && index < DEAD_1_END) ||
+    //     (index >= DEAD_2_START && index < DEAD_2_END) ||
+    //     (index >= DEAD_3_START && index < DEAD_3_END) ||
+    //     (index >= DEAD_4_START && index < DEAD_4_END)) {
+    //     stripBuffer.at(index).SetLED(frc::Color::kBlack);
+    // }
+    // else {
+        stripBuffer[index].SetLED(color);        
+    // }
 }
 
 void BlinkyBlinky::setColor(frc::Color color) {

@@ -86,6 +86,9 @@ void Drive::process() {
         case DriveMode::MANUAL:
             execManual();
             break;
+        case DriveMode::TRAJECTORY:
+            execTrajectory();
+            break;
     }
 }
 
@@ -110,7 +113,46 @@ void Drive::manualControl(double xPct, double yPct, double angPct, unsigned flag
     manualData = { xPct, yPct, angPct, flags };
 }
 
-// void Drive::runTrajectory(const thunder::Trajectory& trajectory) { }
+void Drive::runTrajectory(const char* path) {
+    std::string file_str;
+    {
+        std::ifstream file(path);
+        if (!file) return;
+        file_str = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+    }
+
+    std::string::const_iterator file_iter = file_str.cbegin();
+
+    auto count = [&]() -> std::size_t {
+        std::size_t n = 0;
+        while (file_iter != file_str.end() && *file_iter != '\n' && *file_iter != ',' && *file_iter != '}') {
+        n++;
+        file_iter++;
+        }
+        return n;
+    };
+
+    auto get_str = [&]() -> std::string {
+        std::string::const_iterator start = file_iter;
+        std::size_t n = count();
+        return std::string(start, start + n);
+    };
+
+    
+    file_iter += 29;
+
+    while (file_iter != file_str.cend()) {
+        float time = std::stof(get_str()); ++file_iter;
+        float x_pos = std::stof(get_str()); ++file_iter;
+        float y_pos = std::stof(get_str()); ++file_iter;
+        float velocity = std::stof(get_str()); ++file_iter;
+
+        trajectoryPoints.push_back(TrajectoryPoint{time, x_pos, y_pos, velocity});
+    }
+
+    trajectoryTimer.Start();
+    driveMode = DriveMode::TRAJECTORY;
+}
 
 void Drive::zeroRotation() {
     imu.reset();
@@ -218,6 +260,20 @@ void Drive::execManual() {
 
     // Set the modules to drive at the given velocities.
     setModuleStates(velocities);
+}
+
+void Drive::execTrajectory() {
+    decltype(trajectoryPoints)::const_iterator pt_it;
+
+    for (std::vector<TrajectoryPoint>::const_iterator it = trajectoryPoints.cbegin(); it != trajectoryPoints.cend(); ++it) {
+        double time = trajectoryTimer.Get().value();
+        if (time >= it->time && (it == trajectoryPoints.cend() - 1 || time < (it + 1)->time)) {
+            pt_it = it;
+            break;
+        }
+    }
+
+    
 }
 
 void Drive::makeBrick() {
