@@ -3,6 +3,7 @@
 #include <Basic/Mechanism.h>
 #include <Hardware/HardwareManager.h>
 #include <Drive/SwerveModule.h>
+#include <Drive/Trajectory.h>
 #include <Basic/Feedback.h>
 
 #include <frc/geometry/Transform2d.h>
@@ -13,11 +14,18 @@
 #include <frc/kinematics/SwerveDriveOdometry.h>
 #include <frc/kinematics/SwerveModuleState.h>
 #include <frc/kinematics/ChassisSpeeds.h>
+#include <frc/controller/PIDController.h>
+#include <frc/controller/ProfiledPIDController.h>
+#include <frc/trajectory/TrapezoidProfile.h>
+#include <frc/controller/HolonomicDriveController.h>
+#include <frc/Timer.h>
 #include <units/angle.h>
 #include <units/length.h>
 #include <units/angular_velocity.h>
 #include <units/velocity.h>
 #include <units/angular_acceleration.h>
+#include <units/math.h>
+#include <wpi/numbers>
 #include <array>
 #include <fstream>
 
@@ -25,6 +33,9 @@
 #define ROBOT_WIDTH 0.362_m
 // The length of the robot.
 #define ROBOT_LENGTH 0.66_m
+
+#define DRIVE_AUTO_MAX_ANGULAR_VELOCITY 3.14_rad_per_s
+#define DRIVE_AUTO_MAX_ANGULAR_ACCELERATION (3.14_rad_per_s_sq)
 
 class Drive : public Mechanism {
 public:
@@ -55,7 +66,15 @@ public:
      */
     void manualControl(double xPct, double yPct, double angPct, unsigned flags);
 
-    // void runTrajectory(const thunder::Trajectory& trajectory);
+    /**
+     * Runs a trajectory.
+     */
+    void runTrajectory(const Trajectory& trajectory);
+
+    /**
+     * Returns whether the current process is finished or not.
+     */
+    bool isFinished() const;
 
     /**
      * Resets the rotation of the robot tracked by odometry.
@@ -94,14 +113,19 @@ private:
     void updateOdometry();
 
     /**
-     * Executes process when the drivetrain is stopped.
+     * Executes the process for when the drivetrain is stopped.
      */
     void execStopped();
 
     /**
-     * Executes process when the drivetrain is in manual control.
+     * Executes the process for when the drivetrain is in manual control.
      */
     void execManual();
+
+    /**
+     * Executes the process for when the drivetrain is running a trajectory.
+     */
+    void execTrajectory();
 
     /**
      * Puts the drivetrain into brick mode (all modules turned towards the center).
@@ -179,6 +203,7 @@ private:
     enum class DriveMode {
         STOPPED,
         MANUAL,
+        TRAJECTORY,
     };
 
     // The current drive mode.
@@ -193,4 +218,22 @@ private:
 
     // The data concerning manual control.
     ManualControlData manualData {};
+
+    // The trajectory that is currently being run.
+    const Trajectory* trajectory = nullptr;
+
+    frc::Timer trajectoryTimer;
+
+    // PID Controller for X and Y axis drivetrain movement.
+    frc::PIDController xPIDController { 6.0, 0.0, 0.06 },
+                       yPIDController { 6.0, 0.0, 0.06 };
+
+    // PID Controller for the angular drivetrain movement.
+    frc::ProfiledPIDController<units::radians> thetaPIDController {
+        2.5, 0.0, 0.0,
+        frc::TrapezoidProfile<units::radians>::Constraints(DRIVE_AUTO_MAX_ANGULAR_VELOCITY, DRIVE_AUTO_MAX_ANGULAR_ACCELERATION)
+    };
+
+    // The drive controller that will handle the drivetrain movement.
+    frc::HolonomicDriveController driveController;
 };
