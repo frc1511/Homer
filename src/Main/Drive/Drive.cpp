@@ -8,17 +8,15 @@
 // The maximum angular velocity during manual control.
 #define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 90_deg_per_s
 
-// The maximum angular velocity during vice-grip control.
-#define DRIVE_VISION_MAX_ANGULAR_VELOCITY 300_deg_per_s
-// The minimum angular velocity during vice-grip control.
-#define DRIVE_VISION_MIN_ANGULAR_VELOCITY 20_deg_per_s
-// The coefficient to the angle error to determine the angular velocity during vice-grip control.
-#define DRIVE_VISION_ANGULAR_VELOCITY_FACTOR 5
-
 // The angle at which vice grip doesn't care anymore.
 #define ROTATION_THRESHOLD 1_deg
 
-Drive::Drive() {
+Drive::Drive()
+: driveController([&]() -> frc::HolonomicDriveController {
+        thetaPIDController.EnableContinuousInput(units::radian_t(-180_deg), units::radian_t(180_deg));
+        return frc::HolonomicDriveController(xPIDController, yPIDController, thetaPIDController);
+    } ()) {
+
     // 4s is good?
     imu.configCalTime(ThunderIMU::CalibrationTime::_4s);
     imu.setYawAxis(ThunderIMU::Axis::Z);
@@ -28,6 +26,8 @@ Drive::Drive() {
     if (readOffsetsFile()) {
         applyOffsets();
     }
+
+    driveController.SetEnabled(true);
 }
 
 Drive::~Drive() {
@@ -64,15 +64,6 @@ void Drive::resetToMode(MatchMode mode) {
         if (!isIMUCalibrated()) {
             calibrateIMU();
         }
-    }
-
-    static bool didAutoExist = false;
-
-    if (mode == MatchMode::AUTO) {
-        didAutoExist = true;
-    }
-    if (mode == MatchMode::AUTO || (mode == MatchMode::TELEOP && !didAutoExist)) {
-        resetOdometry();
     }
 }
 
@@ -113,6 +104,7 @@ void Drive::manualControl(double xPct, double yPct, double angPct, unsigned flag
     manualData = { xPct, yPct, angPct, flags };
 }
 
+<<<<<<< HEAD
 void Drive::runTrajectory(const char* path) {
     std::string file_str;
     {
@@ -152,11 +144,25 @@ void Drive::runTrajectory(const char* path) {
 
     trajectoryTimer.Start();
     driveMode = DriveMode::TRAJECTORY;
+=======
+void Drive::runTrajectory(const Trajectory& _trajectory) {
+    driveMode = DriveMode::TRAJECTORY;
+    trajectory = &_trajectory;
+
+    trajectoryTimer.Reset();
+    trajectoryTimer.Start();
+
+    resetOdometry(trajectory->getInitialPose());
+}
+
+bool Drive::isFinished() const {
+    return driveMode == DriveMode::STOPPED;
+>>>>>>> 6ad1376ea2cd21dfe435c6b89c87897f59e3ca05
 }
 
 void Drive::zeroRotation() {
-    imu.reset();
-    resetOdometry();
+    // imu.reset();
+    resetOdometry(getPose());
 }
 
 void Drive::calibrateIMU() {
@@ -220,27 +226,18 @@ void Drive::execManual() {
     if (manualData.flags & ControlFlag::VICE_GRIP) {
         // units::degree_t angleToTurn = -limelight->getAngleHorizontal();
         units::degree_t angleToTurn = 0_deg;
+        
+        units::radian_t currentRotation(getRotation().Radians());
 
-        if (units::math::fabs(angleToTurn) > ROTATION_THRESHOLD) {
-            // Angular velocity is proportional to the angle to turn.
-            angVel = units::degrees_per_second_t(angleToTurn.value() * DRIVE_VISION_ANGULAR_VELOCITY_FACTOR);
-
-            // Clamp the angular velocity between the limits.
-
-            if (angVel > DRIVE_VISION_MAX_ANGULAR_VELOCITY) {
-                angVel = DRIVE_VISION_MAX_ANGULAR_VELOCITY;
-            }
-            else if (angVel < -DRIVE_MANUAL_MAX_ANGULAR_VELOCITY) {
-                angVel = -DRIVE_MANUAL_MAX_ANGULAR_VELOCITY;
-            }
-
-            if (angVel < DRIVE_VISION_MIN_ANGULAR_VELOCITY && angVel > 0_rad_per_s) {
-                angVel = DRIVE_VISION_MIN_ANGULAR_VELOCITY;
-            }
-            else if (angVel > -DRIVE_VISION_MIN_ANGULAR_VELOCITY && angVel < 0_rad_per_s) {
-                angVel = -DRIVE_VISION_MIN_ANGULAR_VELOCITY;
-            }
+        static bool firstRun = true;
+        if (firstRun) {
+            thetaPIDController.Reset(currentRotation);
+            firstRun = false;
         }
+
+        angVel = units::radians_per_second_t(
+            thetaPIDController.Calculate(currentRotation, currentRotation + angleToTurn)
+        );
     }
     else {
         angVel = manualData.angPct * DRIVE_MANUAL_MAX_ANGULAR_VELOCITY;
@@ -263,6 +260,7 @@ void Drive::execManual() {
 }
 
 void Drive::execTrajectory() {
+<<<<<<< HEAD
     decltype(trajectoryPoints)::const_iterator pt_it;
 
     for (std::vector<TrajectoryPoint>::const_iterator it = trajectoryPoints.cbegin(); it != trajectoryPoints.cend(); ++it) {
@@ -274,6 +272,39 @@ void Drive::execTrajectory() {
     }
 
     
+=======
+    units::second_t time = trajectoryTimer.Get();
+
+    if (time > trajectory->getDuration() && driveController.AtReference()) {
+        driveMode = DriveMode::STOPPED;
+        return;
+    }
+
+    // Get the current state of the robot on the trajectory.
+    Trajectory::State state = trajectory->sample(time);
+
+    // The current pose of the robot.
+    frc::Pose2d currentPose = getPose();
+
+    // The desired change in position of the robot.
+    units::meter_t dx(state.xPos - currentPose.X()),
+                   dy(state.yPos - currentPose.Y());
+
+    // The angle which the robot should be driving at.
+    frc::Rotation2d heading(units::math::atan2(dy, dx));
+
+    frc::ChassisSpeeds velocities(
+        driveController.Calculate(
+            currentPose,
+            frc::Pose2d(state.xPos, state.yPos, heading),
+            state.velocity,
+            state.rotation
+        )
+    );
+
+    // Make the robot go vroom :D
+    setModuleStates(velocities);
+>>>>>>> 6ad1376ea2cd21dfe435c6b89c87897f59e3ca05
 }
 
 void Drive::makeBrick() {

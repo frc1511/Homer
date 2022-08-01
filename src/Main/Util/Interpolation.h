@@ -7,13 +7,13 @@
  * Represents a map that can be used for linear interpolation between defined
  * points.
  * 
- * Requires a key type: K, and a value type V.
+ * Key type K and value type V.
  */
 template<typename K, typename V>
 class Interpolation {
 public:
     Interpolation()
-    : map({}) { }
+    : map() { }
     
     Interpolation(std::map<K, V> _map)
     : map(_map) { }
@@ -22,12 +22,11 @@ public:
      * Inserts a key-value pair into the interpolating tree map.
      */
     void insert(K key, V val) {
-        map.insert(std::pair<K, V>(key, val));
+        map.emplace(key, val);
     }
 
     /**
-     * Returns an linearly interpolated value in relation to the closest defined
-     * points.
+     * Returns an linearly interpolated value between the closest defined points.
      */
     std::optional<V> getInterpolated(K key) const {
         try {
@@ -35,39 +34,31 @@ public:
             return map.at(key);
         }
         catch (std::out_of_range&) {
-            using iterator = typename std::map<K, V>::const_iterator;
+            // Iterator to the point directly above and below the key.
+            typename decltype(map)::const_iterator upperBound = map.upper_bound(key),
+                                                   lowerBound = --map.lower_bound(key);
             
-            // Iterator to the point directly above.
-            const iterator upperBound = map.upper_bound(key);
-            // Iterator to the point directly below.
-            const iterator lowerBound = --map.lower_bound(key);
+            // Whether there is no defined point above or below the key.
+            bool noUpper = (upperBound == map.cend()),
+                 noLower = (lowerBound == map.cend());
             
-            // Whether there is no defined point above.
-            bool noUpper = (upperBound == map.end());
-            // Whether there is no defined point below.
-            bool noLower = (lowerBound == map.end());
-            
-            // Check if there are no defined points.
+            // No defined points D:
             if (noUpper && noLower) {
                 return {};
             }
-            // If there is no defined point above, return the one below because
-            // that is the highest one that is defined.
+            // Return the highest defined point if there is no upper bound.
             else if (noUpper) {
                 return lowerBound->second;
             }
-            // If there is no defined point below, return the one above because
-            // that is the lowest one that is defined.
+            // Return the lowest defined point if there is no lower bound.
             else if (noLower) {
                 return upperBound->second;
             }
 
-            // The upper and lower x values.
-            K upperKey = upperBound->first;
-            K lowerKey = lowerBound->first;
-            // The upper and lower y values.
-            V upperVal = upperBound->second;
-            V lowerVal = lowerBound->second;
+            // The upper x and y values.
+            auto [upperKey, upperVal] = *upperBound;
+            // The lower x and y values.
+            auto [lowerKey, lowerVal] = *lowerBound;
 
             // Linear interpolation.
             return (((upperVal - lowerVal) / (upperKey - lowerKey)) * (key - lowerKey)) + lowerVal;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; // hi ishan D:D
@@ -75,8 +66,7 @@ public:
     }
 
     /**
-     * Returns an linearly interpolated value in relation to the closest defined
-     * points.
+     * Returns an linearly interpolated value between the closest defined points.
      */
     std::optional<V> operator[](K key) const {
         return getInterpolated(key);
