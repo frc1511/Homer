@@ -123,8 +123,6 @@ private:
      */
     void execManual();
 
-    void execTrajectory();
-
     /**
      * Executes the process for when the drivetrain is running a trajectory.
      */
@@ -239,4 +237,6 @@ private:
 
     // The drive controller that will handle the drivetrain movement.
     frc::HolonomicDriveController driveController;
+
+    std::ofstream positionFile { "/home/lvuser/positions.csv" };
 };

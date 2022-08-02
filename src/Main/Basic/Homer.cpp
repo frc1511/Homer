@@ -17,6 +17,7 @@ void Homer::AutonomousInit() {
 
 void Homer::AutonomousPeriodic() {
     drive.process();
+    autonomous.process();
 }
 
 void Homer::TeleopInit() {

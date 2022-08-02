@@ -1,21 +1,28 @@
 #include <Drive/Trajectory.h>
 #include <fstream>
+#include <iostream>
 
 Trajectory::Trajectory(const char* path) {
     std::string file_str;
     {
         std::ifstream file(path);
-        if (!file) return;
+        if (!file) {
+            std::cout << "File not opened\n";
+        }
         file_str = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     }
 
     std::string::const_iterator file_iter = file_str.cbegin();
 
+    // file_iter += 35;
+    while (*file_iter != '\n') ++file_iter;
+    ++file_iter;
+
     auto count = [&]() -> std::size_t {
         std::size_t n = 0;
         while (file_iter != file_str.end() && *file_iter != '\n' && *file_iter != ',' && *file_iter != '}') {
-        n++;
-        file_iter++;
+            n++;
+            file_iter++;
         }
         return n;
     };
@@ -27,13 +34,20 @@ Trajectory::Trajectory(const char* path) {
     };
 
     while (file_iter != file_str.cend()) {
+        std::cout << "new thingy\n";
         units::second_t time(get_num()); ++file_iter;
+        std::cout << "time " << time.value() << '\n';
         units::meter_t xPos(get_num()); ++file_iter;
+        std::cout << "xPos " << xPos.value() << '\n';
         units::meter_t yPos(get_num()); ++file_iter;
+        std::cout << "yPos " << yPos.value() << '\n';
         units::meters_per_second_t velocity(get_num()); ++file_iter;
-        // frc::Rotation2d rotation(get_num()); ++file_iter;
+        std::cout << "velocity " << velocity.value() << '\n';
+        frc::Rotation2d rotation = units::radian_t(get_num()); ++file_iter;
+        std::cout << "rotation " << rotation.Radians().value();
 
-        states.emplace(time, State{ xPos, yPos, velocity, frc::Rotation2d(0_deg) });
+        states.emplace(time, State{ xPos, yPos, velocity, rotation });
+        std::cout << "added :D\n";
     }
 }
 

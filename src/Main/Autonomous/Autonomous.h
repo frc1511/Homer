@@ -34,5 +34,5 @@ private:
 
     Drive* drive;
 
-    Trajectory driveForwardTrajectory { "drive_forward.csv" };
+    Trajectory driveForwardTrajectory { "/home/lvuser/deploy/the_path.csv" };
 };

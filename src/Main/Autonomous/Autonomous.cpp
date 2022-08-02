@@ -19,19 +19,21 @@ void Autonomous::resetToMode(MatchMode mode) {
 }
 
 void Autonomous::process() {
+    currentMode = (AutoMode)Feedback::getDouble("Auto", "Mode", 0);
+
     // Autonomous delay.
     if (delayTimer.Get().value() <= Feedback::getDouble("thunderdashboard", "auto_start_delay", 0.0)) {
         return;
     }
 
-    switch (currentMode) {
-        case DO_NOTHING:
-            doNothing();
-            break;
-        case DRIVE_FORWARD:
+    // switch (currentMode) {
+    //     case DO_NOTHING:
+    //         doNothing();
+    //         break;
+        // case DRIVE_FORWARD:
             driveForward();
-            break;
-    }
+            // break;
+    // }
 }
 
 void Autonomous::doNothing() {
@@ -77,4 +79,5 @@ void Autonomous::sendFeedback() {
     handleDashboardString(DRIVE_FORWARD, "Drive Forward or Something");
 
     Feedback::sendString("thunderdashboard", "auto_list", buf);
+
 }

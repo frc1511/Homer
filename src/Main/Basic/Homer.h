@@ -6,6 +6,7 @@
 #include <Control/Controls.h>
 #include <Drive/Drive.h>
 #include <Illumination/BlinkyBlinky.h>
+#include <Autonomous/Autonomous.h>
 #include <Hardware/IOMap.h>
 #include <vector>
 #include <iostream>
@@ -30,7 +31,9 @@ public:
 private:
     void reset(Mechanism::MatchMode mode);
 
+
     Drive drive;
+    Autonomous autonomous{&drive};
 
 #ifndef TEST_BOARD
     // BlinkyBlinky blinkyBlinky;
@@ -43,7 +46,7 @@ private:
     };
 
     std::vector<Mechanism*> allMechanisms {
-        &drive, &controls,
+        &drive, &controls, &autonomous
 #ifndef TEST_BOARD
         // &blinkyBlinky,
 #endif

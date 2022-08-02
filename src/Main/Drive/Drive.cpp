@@ -104,47 +104,6 @@ void Drive::manualControl(double xPct, double yPct, double angPct, unsigned flag
     manualData = { xPct, yPct, angPct, flags };
 }
 
-<<<<<<< HEAD
-void Drive::runTrajectory(const char* path) {
-    std::string file_str;
-    {
-        std::ifstream file(path);
-        if (!file) return;
-        file_str = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-    }
-
-    std::string::const_iterator file_iter = file_str.cbegin();
-
-    auto count = [&]() -> std::size_t {
-        std::size_t n = 0;
-        while (file_iter != file_str.end() && *file_iter != '\n' && *file_iter != ',' && *file_iter != '}') {
-        n++;
-        file_iter++;
-        }
-        return n;
-    };
-
-    auto get_str = [&]() -> std::string {
-        std::string::const_iterator start = file_iter;
-        std::size_t n = count();
-        return std::string(start, start + n);
-    };
-
-    
-    file_iter += 29;
-
-    while (file_iter != file_str.cend()) {
-        float time = std::stof(get_str()); ++file_iter;
-        float x_pos = std::stof(get_str()); ++file_iter;
-        float y_pos = std::stof(get_str()); ++file_iter;
-        float velocity = std::stof(get_str()); ++file_iter;
-
-        trajectoryPoints.push_back(TrajectoryPoint{time, x_pos, y_pos, velocity});
-    }
-
-    trajectoryTimer.Start();
-    driveMode = DriveMode::TRAJECTORY;
-=======
 void Drive::runTrajectory(const Trajectory& _trajectory) {
     driveMode = DriveMode::TRAJECTORY;
     trajectory = &_trajectory;
@@ -152,12 +111,14 @@ void Drive::runTrajectory(const Trajectory& _trajectory) {
     trajectoryTimer.Reset();
     trajectoryTimer.Start();
 
-    resetOdometry(trajectory->getInitialPose());
+    frc::Pose2d initialPose = trajectory->getInitialPose();
+    //initialPose = frc::Pose2d(initialPose.X(), initialPose.Y(), (initialPose.Rotation().Degrees() - 90_deg));
+
+    resetOdometry(initialPose);
 }
 
 bool Drive::isFinished() const {
     return driveMode == DriveMode::STOPPED;
->>>>>>> 6ad1376ea2cd21dfe435c6b89c87897f59e3ca05
 }
 
 void Drive::zeroRotation() {
@@ -260,20 +221,9 @@ void Drive::execManual() {
 }
 
 void Drive::execTrajectory() {
-<<<<<<< HEAD
-    decltype(trajectoryPoints)::const_iterator pt_it;
-
-    for (std::vector<TrajectoryPoint>::const_iterator it = trajectoryPoints.cbegin(); it != trajectoryPoints.cend(); ++it) {
-        double time = trajectoryTimer.Get().value();
-        if (time >= it->time && (it == trajectoryPoints.cend() - 1 || time < (it + 1)->time)) {
-            pt_it = it;
-            break;
-        }
-    }
-
-    
-=======
     units::second_t time = trajectoryTimer.Get();
+
+    //std::cout << "time " << time << '\n';
 
     if (time > trajectory->getDuration() && driveController.AtReference()) {
         driveMode = DriveMode::STOPPED;
@@ -283,6 +233,8 @@ void Drive::execTrajectory() {
     // Get the current state of the robot on the trajectory.
     Trajectory::State state = trajectory->sample(time);
 
+    //state.rotation = state.rotation.Degrees() - 90_deg;
+
     // The current pose of the robot.
     frc::Pose2d currentPose = getPose();
 
@@ -291,7 +243,9 @@ void Drive::execTrajectory() {
                    dy(state.yPos - currentPose.Y());
 
     // The angle which the robot should be driving at.
-    frc::Rotation2d heading(units::math::atan2(dy, dx));
+    frc::Rotation2d heading(units::math::atan2(dy, dx)/* - 90_deg*/);
+
+    positionFile << time.value() << ',' << currentPose.X().value() << ',' << currentPose.Y().value() << ',';// << state.xPos.value() << ',' << state.yPos.value() << ',';
 
     frc::ChassisSpeeds velocities(
         driveController.Calculate(
@@ -302,9 +256,10 @@ void Drive::execTrajectory() {
         )
     );
 
+    positionFile << std::hypotf(velocities.vx.value(), velocities.vy.value()) << ',' << velocities.vx.value() << ',' << velocities.vy.value() << ',' << state.rotation.Radians().value() << '\n';
+
     // Make the robot go vroom :D
     setModuleStates(velocities);
->>>>>>> 6ad1376ea2cd21dfe435c6b89c87897f59e3ca05
 }
 
 void Drive::makeBrick() {
