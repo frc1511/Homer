@@ -34,20 +34,13 @@ Trajectory::Trajectory(const char* path) {
     };
 
     while (file_iter != file_str.cend()) {
-        std::cout << "new thingy\n";
         units::second_t time(get_num()); ++file_iter;
-        std::cout << "time " << time.value() << '\n';
         units::meter_t xPos(get_num()); ++file_iter;
-        std::cout << "xPos " << xPos.value() << '\n';
         units::meter_t yPos(get_num()); ++file_iter;
-        std::cout << "yPos " << yPos.value() << '\n';
         units::meters_per_second_t velocity(get_num()); ++file_iter;
-        std::cout << "velocity " << velocity.value() << '\n';
         frc::Rotation2d rotation = units::radian_t(get_num()); ++file_iter;
-        std::cout << "rotation " << rotation.Radians().value();
 
         states.emplace(time, State{ xPos, yPos, velocity, rotation });
-        std::cout << "added :D\n";
     }
 }
 

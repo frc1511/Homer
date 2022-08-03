@@ -112,7 +112,7 @@ void Drive::runTrajectory(const Trajectory& _trajectory) {
     trajectoryTimer.Start();
 
     frc::Pose2d initialPose = trajectory->getInitialPose();
-    //initialPose = frc::Pose2d(initialPose.X(), initialPose.Y(), (initialPose.Rotation().Degrees() - 90_deg));
+    initialPose = frc::Pose2d(initialPose.X(), initialPose.Y(), (initialPose.Rotation().Degrees() - 90_deg));
 
     resetOdometry(initialPose);
 }
@@ -150,10 +150,7 @@ frc::Pose2d Drive::getPose() {
 frc::Rotation2d Drive::getRotation() {
     units::angle::degree_t imuAngle = imu.getAngle();
 
-    // Make rotation be between 0 and 360 degrees.
-    units::radian_t rotation(units::math::fmod(imuAngle, 360_deg));
-
-    return frc::Rotation2d(rotation);
+    return frc::Rotation2d(imuAngle);
 }
 
 void Drive::updateOdometry() {
@@ -233,7 +230,7 @@ void Drive::execTrajectory() {
     // Get the current state of the robot on the trajectory.
     Trajectory::State state = trajectory->sample(time);
 
-    //state.rotation = state.rotation.Degrees() - 90_deg;
+    state.rotation = state.rotation.Degrees() - 90_deg;
 
     // The current pose of the robot.
     frc::Pose2d currentPose = getPose();
@@ -257,6 +254,8 @@ void Drive::execTrajectory() {
     );
 
     positionFile << std::hypotf(velocities.vx.value(), velocities.vy.value()) << ',' << velocities.vx.value() << ',' << velocities.vy.value() << ',' << state.rotation.Radians().value() << '\n';
+
+
 
     // Make the robot go vroom :D
     setModuleStates(velocities);

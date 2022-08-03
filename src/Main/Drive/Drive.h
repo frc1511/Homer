@@ -226,8 +226,8 @@ private:
     frc::Timer trajectoryTimer;
 
     // PID Controller for X and Y axis drivetrain movement.
-    frc::PIDController xPIDController { 6.0, 0.0, 0.06 },
-                       yPIDController { 6.0, 0.0, 0.06 };
+    frc::PIDController xPIDController { 4.0, 0.0, 0.04 },
+                       yPIDController { 4.0, 0.0, 0.04 };
 
     // PID Controller for the angular drivetrain movement.
     frc::ProfiledPIDController<units::radians> thetaPIDController {

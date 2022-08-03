@@ -9,6 +9,9 @@ void Homer::RobotPeriodic() {
 #ifndef TEST_BOARD
     // blinkyBlinky.process();
 #endif
+    for (Mechanism* mech : allMechanisms) {
+        mech->sendFeedback();
+    }
 }
 
 void Homer::AutonomousInit() {
