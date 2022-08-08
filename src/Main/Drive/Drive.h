@@ -238,5 +238,8 @@ private:
     // The drive controller that will handle the drivetrain movement.
     frc::HolonomicDriveController driveController;
 
-    std::ofstream positionFile { "/home/lvuser/positions.csv" };
+    frc::ChassisSpeeds chassisSpeeds { 0_mps, 0_mps, 0_rad_per_s };
+    frc::Pose2d targetPose;
+
+    std::ofstream trajectoryMotionFile { "/home/lvuser/trajectory_motion.csv" };
 };

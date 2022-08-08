@@ -19,7 +19,7 @@ void Autonomous::resetToMode(MatchMode mode) {
 }
 
 void Autonomous::process() {
-    currentMode = (AutoMode)Feedback::getDouble("Auto", "Mode", 0);
+    currentMode = static_cast<AutoMode>(Feedback::getDouble("Auto", "Mode", AutoMode::DO_NOTHING));
 
     // Autonomous delay.
     if (delayTimer.Get().value() <= Feedback::getDouble("thunderdashboard", "auto_start_delay", 0.0)) {

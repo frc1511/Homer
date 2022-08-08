@@ -12,7 +12,8 @@
 #define ROTATION_THRESHOLD 1_deg
 
 Drive::Drive()
-: driveController([&]() -> frc::HolonomicDriveController {
+: driveController(
+    [&]() -> frc::HolonomicDriveController {
         thetaPIDController.EnableContinuousInput(units::radian_t(-180_deg), units::radian_t(180_deg));
         return frc::HolonomicDriveController(xPIDController, yPIDController, thetaPIDController);
     } ()) {
@@ -220,8 +221,6 @@ void Drive::execManual() {
 void Drive::execTrajectory() {
     units::second_t time = trajectoryTimer.Get();
 
-    //std::cout << "time " << time << '\n';
-
     if (time > trajectory->getDuration() && driveController.AtReference()) {
         driveMode = DriveMode::STOPPED;
         return;
@@ -242,20 +241,28 @@ void Drive::execTrajectory() {
     // The angle which the robot should be driving at.
     frc::Rotation2d heading(units::math::atan2(dy, dx)/* - 90_deg*/);
 
-    positionFile << time.value() << ',' << currentPose.X().value() << ',' << currentPose.Y().value() << ',';// << state.xPos.value() << ',' << state.yPos.value() << ',';
+    targetPose = frc::Pose2d(state.xPos, state.yPos, state.rotation);
 
     frc::ChassisSpeeds velocities(
         driveController.Calculate(
             currentPose,
-            frc::Pose2d(state.xPos, state.yPos, heading),
+            targetPose,
             state.velocity,
             state.rotation
         )
     );
 
-    positionFile << std::hypotf(velocities.vx.value(), velocities.vy.value()) << ',' << velocities.vx.value() << ',' << velocities.vy.value() << ',' << state.rotation.Radians().value() << '\n';
-
-
+    // Log motion to CSV file.
+    trajectoryMotionFile << time.value() << ','
+                         << currentPose.X().value()
+                         << currentPose.Y().value()
+                         << targetPose.X().value()
+                         << targetPose.Y().value()
+                         << velocities.vx.value()
+                         << velocities.vy.value()
+                         << velocities.omega.value()
+                         << currentPose.Rotation().Radians().value()
+                         << state.rotation.Radians().value() << '\n';
 
     // Make the robot go vroom :D
     setModuleStates(velocities);
@@ -363,6 +370,9 @@ void Drive::setIdleMode(ThunderMotorController::IdleMode mode) {
 }
 
 void Drive::setModuleStates(frc::ChassisSpeeds speeds) {
+    // Store velocities for feedback.
+    chassisSpeeds = speeds;
+
     // Generate module states using the chassis velocities. This is the magic
     // function of swerve drive.
     wpi::array<frc::SwerveModuleState, 4> moduleStates = kinematics.ToSwerveModuleStates(speeds);
@@ -397,4 +407,14 @@ void Drive::sendFeedback() {
     Feedback::sendBoolean("Drive", "field centric", manualData.flags & ControlFlag::FIELD_CENTRIC);
     Feedback::sendBoolean("Drive", "vice grip", manualData.flags & ControlFlag::VICE_GRIP);
     Feedback::sendBoolean("Drive", "brick", manualData.flags & ControlFlag::BRICK);
+
+    Feedback::sendDouble("DriveCSV", "x_pos", pose.X().value());
+    Feedback::sendDouble("DriveCSV", "y_pos", pose.Y().value());
+    Feedback::sendDouble("DriveCSV", "dest_x_pos", targetPose.X().value());
+    Feedback::sendDouble("DriveCSV", "dest_y_pos", targetPose.Y().value());
+    Feedback::sendDouble("DriveCSV", "x_vel", chassisSpeeds.vx.value());
+    Feedback::sendDouble("DriveCSV", "y_vel", chassisSpeeds.vy.value());
+    Feedback::sendDouble("DriveCSV", "ang_vel", chassisSpeeds.omega.value());
+    Feedback::sendDouble("DriveCSV", "ang", pose.Rotation().Radians().value());
+    Feedback::sendDouble("DriveCSV", "dest_ang", targetPose.Rotation().Radians().value());
 }

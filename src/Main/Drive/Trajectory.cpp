@@ -14,7 +14,6 @@ Trajectory::Trajectory(const char* path) {
 
     std::string::const_iterator file_iter = file_str.cbegin();
 
-    // file_iter += 35;
     while (*file_iter != '\n') ++file_iter;
     ++file_iter;
 
