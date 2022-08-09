@@ -5,6 +5,8 @@
 #include <frc/Timer.h>
 #include <Drive/Trajectory.h>
 
+#define DEPLOY_DIR "/home/lvuser/deploy/"
+
 class Drive;
 
 class Autonomous : public Mechanism {
@@ -17,15 +19,17 @@ public:
     void resetToMode(MatchMode mode) override;
 
 private:
-    enum AutoMode {
+    enum class AutoMode {
         DO_NOTHING = 0, // Do nothing or something.
-        DRIVE_FORWARD = 1,
+        LINE = 1, // Drive straight 6 meters and drive back.
+        GREAT_HALLWAY_ADVENTURE = 2, // Drive around the hallway.
     };
 
     void doNothing();
-    void driveForward();
+    void line();
+    void greatHallwayAdventure();
 
-    AutoMode currentMode = DO_NOTHING;
+    AutoMode currentMode = AutoMode::DO_NOTHING;
 
     frc::Timer delayTimer,
                autoTimer;
@@ -34,5 +38,6 @@ private:
 
     Drive* drive;
 
-    Trajectory driveForwardTrajectory { "/home/lvuser/deploy/line.csv" };
+    Trajectory lineTrajectory { DEPLOY_DIR "line/line.csv" };
+    Trajectory greatHallwayAdventureTrajectory { DEPLOY_DIR "great_hallway_adventure/great_hallway_adventure.csv" };
 };

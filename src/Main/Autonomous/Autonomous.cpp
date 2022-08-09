@@ -2,13 +2,9 @@
 #include <Drive/Drive.h>
 
 Autonomous::Autonomous(Drive* drive)
-: drive(drive) {
+: drive(drive) { }
 
-}
-
-Autonomous::~Autonomous() {
-
-}
+Autonomous::~Autonomous() { }
 
 void Autonomous::resetToMode(MatchMode mode) {
     delayTimer.Reset();
@@ -19,21 +15,24 @@ void Autonomous::resetToMode(MatchMode mode) {
 }
 
 void Autonomous::process() {
-    currentMode = static_cast<AutoMode>(Feedback::getDouble("Auto", "Mode", AutoMode::DO_NOTHING));
+    currentMode = static_cast<AutoMode>(Feedback::getDouble("Auto", "Mode", 0));
 
     // Autonomous delay.
     if (delayTimer.Get().value() <= Feedback::getDouble("thunderdashboard", "auto_start_delay", 0.0)) {
         return;
     }
 
-    // switch (currentMode) {
-    //     case DO_NOTHING:
-    //         doNothing();
-    //         break;
-        // case DRIVE_FORWARD:
-            driveForward();
-            // break;
-    // }
+    switch (currentMode) {
+        case AutoMode::DO_NOTHING:
+            doNothing();
+            break;
+        case AutoMode::LINE:
+            line();
+            break;
+        case AutoMode::GREAT_HALLWAY_ADVENTURE:
+            greatHallwayAdventure();
+            break;
+    }
 }
 
 void Autonomous::doNothing() {
@@ -47,9 +46,19 @@ void Autonomous::doNothing() {
     // Very bad function. - jeff ups
 }
 
-void Autonomous::driveForward() {
+void Autonomous::line() {
     if (step == 0) {
-        drive->runTrajectory(driveForwardTrajectory);
+        drive->runTrajectory(lineTrajectory);
+        ++step;
+    }
+    else if (step == 1 && drive->isFinished()) {
+        ++step;
+    }
+}
+
+void Autonomous::greatHallwayAdventure() {
+    if (step == 0) {
+        drive->runTrajectory(greatHallwayAdventureTrajectory);
         ++step;
     }
     else if (step == 1 && drive->isFinished()) {
@@ -61,23 +70,23 @@ void Autonomous::sendFeedback() {
     Feedback::sendDouble("Autonomous", "step", step);
     Feedback::sendBoolean("Autonomous", "drive finished", drive->isFinished());
 
-    char buf[256] = "";
+    char buffer[256] = "";
 
-    auto handleDashboardString = [&](AutoMode mode, const char* description) {
+    auto sendAutoMode = [&](AutoMode mode, const char* description) {
         // Append mode number to the end of the buffer.
-        sprintf(&buf[strlen(buf)], ",%d", mode);
+        sprintf(&buffer[strlen(buffer)], ",%d", static_cast<int>(mode));
 
         char mode_str[32];
 
         // Convert the mode into a string.
-        sprintf(mode_str, "%d", mode);
+        sprintf(mode_str, "%d", static_cast<int>(mode));
         
         Feedback::sendString("thunderdashboard_auto", mode_str, description);
     };
 
-    handleDashboardString(DO_NOTHING, "Do Nothing?!? Nooooooo!!!!");
-    handleDashboardString(DRIVE_FORWARD, "Drive Forward or Something");
+    sendAutoMode(AutoMode::DO_NOTHING, "Do Nothing?!? Nooooooo!!!!");
+    sendAutoMode(AutoMode::LINE, "Drive forward 6m and drive back while turning");
+    sendAutoMode(AutoMode::GREAT_HALLWAY_ADVENTURE, "Drive Forward or Something");
 
-    Feedback::sendString("thunderdashboard", "auto_list", buf);
-
+    Feedback::sendString("thunderdashboard", "auto_list", buffer);
 }

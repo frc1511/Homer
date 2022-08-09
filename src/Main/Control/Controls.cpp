@@ -53,7 +53,6 @@ void Controls::doDrive() {
     }
 
     if (zeroRotation) {
-        std::cout << "zeroed rotation\n";
         drive->zeroRotation();
     }
 

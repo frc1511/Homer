@@ -44,18 +44,9 @@ BlinkyBlinky::BlinkyBlinky() {
 
 BlinkyBlinky::~BlinkyBlinky() = default;
 
-void BlinkyBlinky::resetToMode(MatchMode mode) {
-
-}
+void BlinkyBlinky::resetToMode(MatchMode mode) { }
 
 void BlinkyBlinky::process() {
-
-    // setColor(frc::Color::kNavy);
-
-    // strip.SetData(stripBuffer);
-
-
-    return;
     switch (ledMode) {
         case LEDMode::OFF:
             // Turn the LEDs off D:
@@ -121,7 +112,7 @@ void BlinkyBlinky::setPixel(std::size_t index, frc::Color color) {
     //     stripBuffer.at(index).SetLED(frc::Color::kBlack);
     // }
     // else {
-        stripBuffer[index].SetLED(color);        
+        stripBuffer[index].SetLED(color);
     // }
 }
 

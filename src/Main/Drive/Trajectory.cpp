@@ -5,6 +5,7 @@
 Trajectory::Trajectory(const char* path) {
     std::string file_str;
     {
+        // Open the CSV file.
         std::ifstream file(path);
         if (!file) {
             std::cout << "File not opened\n";
@@ -17,21 +18,27 @@ Trajectory::Trajectory(const char* path) {
     while (*file_iter != '\n') ++file_iter;
     ++file_iter;
 
-    auto count = [&]() -> std::size_t {
-        std::size_t n = 0;
-        while (file_iter != file_str.end() && *file_iter != '\n' && *file_iter != ',' && *file_iter != '}') {
+    // Count the number of characters until the next newline or comma.
+    auto count = [&]() -> std::ptrdiff_t {
+        std::ptrdiff_t n = 0;
+        while (file_iter != file_str.end() && *file_iter != '\n' && *file_iter != ',') {
             n++;
             file_iter++;
         }
         return n;
     };
 
+    // Read a number from the file.
     auto get_num = [&]() -> double {
+        // Save the starting position.
         std::string::const_iterator start = file_iter;
+        // Count the number of characters.
         std::size_t n = count();
+        // Read the string as a double.
         return std::stod(std::string(start, start + n));
     };
 
+    // Read each line of the file.
     while (file_iter != file_str.cend()) {
         units::second_t time(get_num()); ++file_iter;
         units::meter_t xPos(get_num()); ++file_iter;
@@ -39,6 +46,7 @@ Trajectory::Trajectory(const char* path) {
         units::meters_per_second_t velocity(get_num()); ++file_iter;
         frc::Rotation2d rotation = units::radian_t(get_num()); ++file_iter;
 
+        // Add the point to the trajectory.
         states.emplace(time, State{ xPos, yPos, velocity, rotation });
     }
 }
@@ -79,14 +87,14 @@ Trajectory::State Trajectory::sample(units::second_t time) const {
 
     // Linear interpolation of all the values.
 
-    double t = (time.value() - lowerTime.value()) / (upperTime.value() - lowerTime.value());
+    double t((time.value() - lowerTime.value()) / (upperTime.value() - lowerTime.value()));
 
-    units::meter_t xPos = ((upperState.xPos - lowerState.xPos) * t) + lowerState.xPos,
-                   yPos = ((upperState.yPos - lowerState.yPos) * t) + lowerState.yPos;
+    units::meter_t xPos(((upperState.xPos - lowerState.xPos) * t) + lowerState.xPos),
+                   yPos(((upperState.yPos - lowerState.yPos) * t) + lowerState.yPos);
 
-    units::meters_per_second_t velocity = ((upperState.velocity - lowerState.velocity) * t) + lowerState.velocity;
+    units::meters_per_second_t velocity(((upperState.velocity - lowerState.velocity) * t) + lowerState.velocity);
 
-    frc::Rotation2d rotation = ((upperState.rotation.Radians() - lowerState.rotation.Radians()) * t) + lowerState.rotation.Radians();
+    frc::Rotation2d rotation(((upperState.rotation.Radians() - lowerState.rotation.Radians()) * t) + lowerState.rotation.Radians());
 
     return State{ xPos, yPos, velocity, rotation };
 }
