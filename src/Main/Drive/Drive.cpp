@@ -29,6 +29,8 @@ Drive::Drive()
     }
 
     driveController.SetEnabled(true);
+
+    trajectoryMotionFile << "time,x_pos,y_pos,dest_x_pos,dest_y_pos,vel_x,vel_y,vel_ang,ang,dest_ang,dest_vel\n";
 }
 
 Drive::~Drive() {
@@ -246,23 +248,29 @@ void Drive::execTrajectory() {
     frc::ChassisSpeeds velocities(
         driveController.Calculate(
             currentPose,
-            targetPose,
+            frc::Pose2d(state.xPos, state.yPos, heading),
             state.velocity,
             state.rotation
         )
     );
 
+    // units::meters_per_second_t xVel = state.velocity * units::math::cos(heading.Radians()),
+    //                            yVel = state.velocity * units::math::sin(heading.Radians());
+
+    // frc::ChassisSpeeds velocities { xVel, yVel, units::radians_per_second_t(thetaPIDController.Calculate(currentPose.Rotation().Radians(), state.rotation.Radians())) };
+
     // Log motion to CSV file.
     trajectoryMotionFile << time.value() << ','
-                         << currentPose.X().value()
-                         << currentPose.Y().value()
-                         << targetPose.X().value()
-                         << targetPose.Y().value()
-                         << velocities.vx.value()
-                         << velocities.vy.value()
-                         << velocities.omega.value()
-                         << currentPose.Rotation().Radians().value()
-                         << state.rotation.Radians().value() << '\n';
+                         << currentPose.X().value() << ','
+                         << currentPose.Y().value() << ','
+                         << targetPose.X().value() << ','
+                         << targetPose.Y().value() << ','
+                         << velocities.vx.value() << ','
+                         << velocities.vy.value() << ','
+                         << velocities.omega.value() << ','
+                         << currentPose.Rotation().Radians().value() << ','
+                         << state.rotation.Radians().value() << ','
+                         << state.velocity.value() << '\n';
 
     // Make the robot go vroom :D
     setModuleStates(velocities);
@@ -379,7 +387,8 @@ void Drive::setModuleStates(frc::ChassisSpeeds speeds) {
     
     // Recalculate the wheel velocities relative to the max speed. Actually
     // does absolutely nothing in this situation.
-    kinematics.DesaturateWheelSpeeds(&moduleStates, DRIVE_MANUAL_MAX_VELOCITY);
+    // THIS LINE IS BAAADDD! Like D: D: D: D:
+    // kinematics.DesaturateWheelSpeeds(&moduleStates, DRIVE_MANUAL_MAX_VELOCITY);
     
     // Set the states of the individual modules.
     for(std::size_t i = 0; i < swerveModules.size(); i++) {
