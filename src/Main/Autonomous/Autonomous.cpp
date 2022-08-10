@@ -32,6 +32,9 @@ void Autonomous::process() {
         case AutoMode::GREAT_HALLWAY_ADVENTURE:
             greatHallwayAdventure();
             break;
+        case AutoMode::DEMO_LONG:
+            demoLong();
+            break;
     }
 }
 
@@ -66,6 +69,16 @@ void Autonomous::greatHallwayAdventure() {
     }
 }
 
+void Autonomous::demoLong() {
+    if (step == 0) {
+        drive->runTrajectory(demoLongTrajectory);
+        ++step;
+    }
+    else if (step == 1 && drive->isFinished()) {
+        ++step;
+    }
+}
+
 void Autonomous::sendFeedback() {
     Feedback::sendDouble("Autonomous", "step", step);
     Feedback::sendBoolean("Autonomous", "drive finished", drive->isFinished());
@@ -87,6 +100,7 @@ void Autonomous::sendFeedback() {
     sendAutoMode(AutoMode::DO_NOTHING, "Do Nothing?!? Nooooooo!!!!");
     sendAutoMode(AutoMode::LINE, "Drive forward 6m and drive back while turning");
     sendAutoMode(AutoMode::GREAT_HALLWAY_ADVENTURE, "Drive Forward or Something");
+    sendAutoMode(AutoMode::DEMO_LONG, "Demo Long");
 
     Feedback::sendString("thunderdashboard", "auto_list", buffer);
 }

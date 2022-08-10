@@ -23,11 +23,13 @@ private:
         DO_NOTHING = 0, // Do nothing or something.
         LINE = 1, // Drive straight 6 meters and drive back.
         GREAT_HALLWAY_ADVENTURE = 2, // Drive around the hallway.
+        DEMO_LONG = 3,
     };
 
     void doNothing();
     void line();
     void greatHallwayAdventure();
+    void demoLong();
 
     AutoMode currentMode = AutoMode::DO_NOTHING;
 
@@ -40,4 +42,5 @@ private:
 
     Trajectory lineTrajectory { DEPLOY_DIR "line/line.csv" };
     Trajectory greatHallwayAdventureTrajectory { DEPLOY_DIR "great_hallway_adventure/great_hallway_adventure.csv" };
+    Trajectory demoLongTrajectory { DEPLOY_DIR "demo/long.csv" };
 };
