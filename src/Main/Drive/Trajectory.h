@@ -48,6 +48,12 @@ public:
      */
     frc::Pose2d getInitialPose() const;
 
+    /**
+     * Returns the actions with their attributed timestamps.
+     */
+    std::map<units::second_t, unsigned> getActions() const;
+
 private:
     std::map<units::second_t, State> states;
+    std::map<units::second_t, unsigned> actions;
 };

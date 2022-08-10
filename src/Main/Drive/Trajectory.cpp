@@ -45,9 +45,14 @@ Trajectory::Trajectory(const char* path) {
         units::meter_t yPos(get_num()); ++file_iter;
         units::meters_per_second_t velocity(get_num()); ++file_iter;
         frc::Rotation2d rotation = units::radian_t(get_num()); ++file_iter;
+        unsigned action = static_cast<unsigned>(get_num()); ++file_iter;
 
         // Add the point to the trajectory.
         states.emplace(time, State{ xPos, yPos, velocity, rotation });
+        
+        if (action) {
+          actions.emplace(time, action);
+        }
     }
 }
 
@@ -108,4 +113,8 @@ frc::Pose2d Trajectory::getInitialPose() const {
     const State& state(states.cbegin()->second);
 
     return frc::Pose2d(state.xPos, state.yPos, state.rotation);
+}
+
+std::map<units::second_t, unsigned> Trajectory::getActions() const {
+  return actions;
 }
