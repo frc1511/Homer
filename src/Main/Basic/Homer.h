@@ -31,9 +31,8 @@ public:
 private:
     void reset(Mechanism::MatchMode mode);
 
-
     Drive drive;
-    Autonomous autonomous{&drive};
+    Autonomous autonomous { &drive };
 
 #ifndef TEST_BOARD
     // BlinkyBlinky blinkyBlinky;

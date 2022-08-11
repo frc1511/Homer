@@ -8,6 +8,7 @@
 #include <wpi/numbers>
 #include <units/math.h>
 #include <map>
+#include <cstdint>
 
 /**
  * Represents a ThunderAuto trajectory for the robot to follow.
@@ -51,9 +52,9 @@ public:
     /**
      * Returns the actions with their attributed timestamps.
      */
-    std::map<units::second_t, unsigned> getActions() const;
+    inline const std::map<units::second_t, u_int32_t>& getActions() const { return actions; }
 
 private:
     std::map<units::second_t, State> states;
-    std::map<units::second_t, unsigned> actions;
+    std::map<units::second_t, u_int32_t> actions;
 };

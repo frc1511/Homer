@@ -25,7 +25,7 @@ public:
     void stop();
 
     /**
-     * Sets the state of the swerve module. (Velocity and angle).
+     * Sets the state of the swerve module (Velocity and angle).
      */
     void setState(frc::SwerveModuleState state);
 
@@ -35,7 +35,8 @@ public:
     frc::SwerveModuleState getState();
 
     /**
-     * Returns the raw rotation of the absolute turning encoder.
+     * Returns the raw rotation of the absolute turning encoder (Without
+     * offsets applied).
      */
     units::radian_t getRawRotation();
 
@@ -71,7 +72,8 @@ private:
     double getRelativeRotation();
 
     /**
-     * Returns the absolute rotation of the module (CANCoder encoder value).
+     * Returns the absolute rotation of the module (CANCoder encoder value
+     * with offsets applied).
      */
     frc::Rotation2d getAbsoluteRotation();
 
@@ -94,7 +96,7 @@ private:
     // The absolute encoder.
     HardwareManager::SwerveTurningEncoder turningAbsEncoder;
 
-    // The offset of the CANCoders.
+    // The offset of the CANCoder.
     units::radian_t canCoderOffset = 0_rad;
 
     // The target rotation of the swerve module.

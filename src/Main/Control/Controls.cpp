@@ -5,13 +5,9 @@
 #define AXIS_DEADZONE 0.1
 
 Controls::Controls(Drive* drive, BlinkyBlinky* blinkyBlinky)
-: drive(drive), blinkyBlinky(blinkyBlinky) {
+: drive(drive), blinkyBlinky(blinkyBlinky) { }
 
-}
-
-Controls::~Controls() {
-
-}
+Controls::~Controls() { }
 
 void Controls::process() {
     doDrive();
@@ -35,7 +31,7 @@ void Controls::doDrive() {
     
     driveCtrlFlags = Drive::ControlFlag::NONE;
 
-    if (driveFieldCentric) {
+    if (!driveRobotCentric) {
         driveCtrlFlags |= Drive::ControlFlag::FIELD_CENTRIC;
     }
 
@@ -80,11 +76,12 @@ void Controls::doDrive() {
         finalAngVel = improveAxis(angVel);
     }
 
+    // Returns whether the robot should be moving.
     auto isMoving = [&]() -> bool {
         return (driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) || finalXVel || finalYVel || finalAngVel;
     };
 
-    // Stay in brick drive if set before and isn't moving.
+    // Stay in brick drive mode if the robot isn't moving.
     if (wasBrickDrive && !isMoving()) {
         driveCtrlFlags |= Drive::ControlFlag::BRICK;
     }
@@ -95,6 +92,7 @@ void Controls::doDrive() {
 
 bool Controls::getShouldPersistConfig() {
     doSwitchPanel();
+
     return settings.isCraterMode
         && driveController.getTriangleButton() && driveController.getDPad() == 180
         && auxController.getCrossButton() && auxController.getDPad() == 0;
@@ -106,7 +104,7 @@ void Controls::doAux() {
 
 void Controls::doSwitchPanel() {
     settings.isCraterMode = switchPanel.GetRawButton(1);
-    driveFieldCentric = switchPanel.GetRawButton(2);
+    driveRobotCentric = switchPanel.GetRawButton(2);
 
     if (blinkyBlinky) {
         if (switchPanel.GetRawButton(3)) {
@@ -133,6 +131,4 @@ void Controls::doSwitchPanel() {
     }
 }
 
-void Controls::sendFeedback() {
-
-}
+void Controls::sendFeedback() { }

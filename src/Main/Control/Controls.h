@@ -25,7 +25,7 @@ private:
     void doAux();
     void doSwitchPanel();
 
-    bool driveFieldCentric = false;
+    bool driveRobotCentric = false;
     unsigned driveCtrlFlags = Drive::ControlFlag::NONE;
 
     Drive* drive;

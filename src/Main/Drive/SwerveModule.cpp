@@ -28,10 +28,10 @@
 // Drive encoder value after one foot.
 #define DRIVE_FOOT_TO_ENDODER_FACTOR 6.51
 
-// The coefficient used to convert a distance in meters into a number of rotations of the NEO motors.
+// The coefficient used to convert a distance in meters into a number of rotations of the NEO drive motors.
 #define DRIVE_METER_TO_ENCODER_FACTOR (DRIVE_FOOT_TO_ENDODER_FACTOR * 3.28084)
 
-// The coefficient used to convert rotations of the NEO motors into a distance traveled in meters.
+// The coefficient used to convert rotations of the NEO drive motors into a distance traveled in meters.
 #define DRIVE_ENCODER_TO_METER_FACTOR (1 / (DRIVE_METER_TO_ENCODER_FACTOR))
 
 
@@ -96,6 +96,8 @@ void SwerveModule::configureMotors() {
 
 void SwerveModule::doPersistentConfiguration() {
     configureMotors();
+
+    // Burn the current configuration into the motor controllers' flash memory.
     driveMotor.burnFlash();
     turningMotor.burnFlash();
 }
@@ -108,23 +110,27 @@ void SwerveModule::stop() {
 
 void SwerveModule::setState(frc::SwerveModuleState targetState) {
     frc::SwerveModuleState currentState = getState();
-  
-    // Optimize the target state by flipping motor directions and adjusting
-    // rotations in order to turn the least amount of distance possible.
+
     frc::SwerveModuleState optimizedState;
 
-    // Turn off optimization in crater mode just to see what happens.
+    // Turn off optimization in crater mode to help with configuration.
     if (settings.isCraterMode) {
         optimizedState = targetState;
     }
     else {
+        /**
+         * Optimize the target state by flipping motor directions and adjusting
+         * rotations in order to turn the least amount of distance possible.
+         */
         optimizedState = frc::SwerveModuleState::Optimize(targetState, currentState.angle);
     }
 
-    // Only handle turning when we are actually driving (Stops the modules from
-    // snapping back to 0 when the robot comes to a stop).
+    /**
+     * Only handle turning when the robot is actually driving (Stops the modules
+     * from snapping back to 0 when the robot comes to a stop).
+     */
     if(units::math::abs(optimizedState.speed) > 0.01_mps) {
-        // Rotate the swerve module.
+        // Rotate the swerve module to the desired angle.
         setTurningMotor(optimizedState.angle.Radians());
     }
   
@@ -143,27 +149,29 @@ units::radian_t SwerveModule::getRawRotation() {
 
 void SwerveModule::setTurningMotor(units::radian_t angle) {
     // Subtract the absolute rotation from the target rotation to get the angle to turn.
-    units::radian_t rotation(angle - getAbsoluteRotation().Radians());
+    units::radian_t angleDelta(angle - getAbsoluteRotation().Radians());
     
-    // Fix the discontinuity problem by converting a -2π to 2π value into -π to π value.
-    // If the value is above π rad or below -π rad...
-    if(units::math::abs(rotation).value() > wpi::numbers::pi) {
-        int sign = std::signbit(rotation.value()) ? -1 : 1;
+    /**
+     * Fix the discontinuity problem by converting a -2π to 2π value into -π to π value.
+     * If the value is above π rad or below -π rad...
+     */
+    if(units::math::abs(angleDelta).value() > wpi::numbers::pi) {
+        int sign = std::signbit(angleDelta.value()) ? -1 : 1;
         
         // Subtract 2π rad, or add 2π rad depending on the sign.
-        rotation = units::radian_t(rotation.value() - (2 * wpi::numbers::pi) * sign);
+        angleDelta = units::radian_t(angleDelta.value() - (2 * wpi::numbers::pi) * sign);
     }
 
     // Add back the absolute rotation to get the desired angle.
-    targetRotation = rotation + getAbsoluteRotation().Degrees();
+    targetRotation = angleDelta + getAbsoluteRotation().Degrees();
     
-    // Convert the radian angle value to the internal encoder value.
-    double output = rotation.value() * TURN_RADIAN_TO_ENCODER_FACTOR;
+    // Convert the angle (radians) to a NEO 550 encoder value.
+    double output = angleDelta.value() * TURN_RADIAN_TO_ENCODER_FACTOR;
     
-    // Add the current relative rotation.
+    // Add the current relative rotation to get the position to reference.
     output += getRelativeRotation();
 
-    // Set the PID reference to the desired angle.
+    // Set the PID reference to the desired position.
     turningMotor.set(ThunderMotorController::ControlMode::POSITION, output);
 }
 
@@ -176,7 +184,7 @@ void SwerveModule::setIdleMode(ThunderMotorController::IdleMode idleMode) {
 }
 
 void SwerveModule::setDriveMotor(units::meters_per_second_t velocity) {
-    // Convert meters per second into RPM.
+    // Convert the velocity value (meters per second) into RPM.
     double rpm = velocity.value() * 60 * DRIVE_METER_TO_ENCODER_FACTOR;
 
     // Set the PID reference to the desired RPM.
@@ -202,8 +210,8 @@ double SwerveModule::getRawDriveEncoder() {
 }
 
 units::meters_per_second_t SwerveModule::getDriveVelocity() {
-    // Convert RPM to meters per second.
-    double mps =  (driveMotor.getEncoderVelocity() / 60) * DRIVE_ENCODER_TO_METER_FACTOR;
+    // Convert the RPM to a velocity value (meters per second).
+    double mps = (driveMotor.getEncoderVelocity() / 60) * DRIVE_ENCODER_TO_METER_FACTOR;
     
     return units::meters_per_second_t(mps);
 }

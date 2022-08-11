@@ -1,10 +1,11 @@
 #include <Drive/Drive.h>
 
-// The file in which magnetic encoder offsets are stored on the RoboRIO.
+// The file which magnetic encoder offsets are stored on the RoboRIO.
 #define ENCODER_OFFSETS_FILE_NAME "/home/lvuser/magnetic_encoder_offsets.txt"
 
 // The maximum velocity during manual control.
 #define DRIVE_MANUAL_MAX_VELOCITY 1_mps
+
 // The maximum angular velocity during manual control.
 #define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 90_deg_per_s
 
@@ -49,7 +50,7 @@ void Drive::resetToMode(MatchMode mode) {
     driveMode = DriveMode::STOPPED;
     manualData = {};
 
-    // This seems to be necessary.
+    // This seems to be necessary. Don't ask me why.
     for (SwerveModule* module : swerveModules) {
         module->stop();
     }
@@ -64,7 +65,11 @@ void Drive::resetToMode(MatchMode mode) {
         // Brake all motors when enabled to help counteract pushing.
         setIdleMode(ThunderMotorController::IdleMode::BRAKE);
 
-        // Calibrate the IMU if not already calibrated.
+        /**
+         * Calibrate the IMU if not already calibrated. This will cause the
+         * robot to pause for 4 seconds while it waits for it to calibrate, so
+         * the IMU should be calibrated BEFORE the match begins.
+         */
         if (!isIMUCalibrated()) {
             calibrateIMU();
         }
@@ -76,7 +81,7 @@ void Drive::resetToMode(MatchMode mode) {
         // Clear the motion profile CSV file.
         trajectoryMotionFile.clear();
         
-        // Write the header.
+        // Write the header of the CSV file.
         trajectoryMotionFile << "time,x_pos,y_pos,dest_x_pos,dest_y_pos,vel_x,vel_y,vel_ang,ang,dest_ang\n";
     }
 }
@@ -118,10 +123,18 @@ void Drive::manualControl(double xPct, double yPct, double angPct, unsigned flag
     manualData = { xPct, yPct, angPct, flags };
 }
 
-void Drive::runTrajectory(const Trajectory& _trajectory) {
+void Drive::runTrajectory(const Trajectory& _trajectory, const std::map<u_int32_t, Action*>& actionMap) {
     driveMode = DriveMode::TRAJECTORY;
     // Set the trajectory.
     trajectory = &_trajectory;
+
+    // Set the initial action.
+    trajectoryActionIter = trajectory->getActions().cbegin();
+
+    trajectoryActions = &actionMap;
+
+    // Reset done trajectory actions.
+    doneTrajectoryActions.clear();
 
     // Reset the trajectory timer.
     trajectoryTimer.Reset();
@@ -129,6 +142,7 @@ void Drive::runTrajectory(const Trajectory& _trajectory) {
 
     // Get the initial pose of the robot.
     frc::Pose2d initialPose(trajectory->getInitialPose());
+    // Adjust the rotation because everything about this robot is 90 degrees off D:
     initialPose = frc::Pose2d(initialPose.X(), initialPose.Y(), (initialPose.Rotation().Degrees() - 90_deg));
 
     // Reset the odometry to the initial pose.
@@ -136,18 +150,22 @@ void Drive::runTrajectory(const Trajectory& _trajectory) {
 }
 
 bool Drive::isFinished() const {
+    // Stopped is as 'finished' as it gets I guess.
     return driveMode == DriveMode::STOPPED;
 }
 
 void Drive::zeroRotation() {
-    // imu.reset();
     resetOdometry(getPose());
+    imu.reset();
 }
 
 void Drive::calibrateIMU() {
     imu.calibrate();
-    // Sleep the current thread manually because the IMU library doesn't
-    // do it automatically for some reason D:
+
+    /**
+     * Sleep the current thread manually because the IMU library doesn't
+     * do it automatically for some reason D:
+     */
     sleep(4);
     
     imuCalibrated = true;
@@ -167,7 +185,7 @@ frc::Pose2d Drive::getPose() {
 
 frc::Rotation2d Drive::getRotation() {
     // The raw rotation from the IMU.
-    units::angle::degree_t imuAngle = imu.getAngle();
+    units::degree_t imuAngle = imu.getAngle();
 
     return frc::Rotation2d(imuAngle);
 }
@@ -185,6 +203,7 @@ void Drive::execStopped() {
     // Set the speeds to 0.
     setModuleStates({ 0_mps, 0_mps, 0_deg_per_s });
 
+    // Just for feedback.
     targetPose = getPose();
 
     // Put the drivetrain into brick mode if the flag is set.
@@ -194,6 +213,7 @@ void Drive::execStopped() {
 }
 
 void Drive::execManual() {
+    // Chassis velocities from percentages of configured max velocities.
     units::meters_per_second_t xVel = manualData.xPct * DRIVE_MANUAL_MAX_VELOCITY;
     units::meters_per_second_t yVel = manualData.yPct * DRIVE_MANUAL_MAX_VELOCITY;
     units::radians_per_second_t angVel = manualData.angPct * DRIVE_MANUAL_MAX_ANGULAR_VELOCITY;
@@ -208,13 +228,17 @@ void Drive::execManual() {
         
         units::radian_t currentRotation(getRotation().Radians());
 
+        // Reset the PID controller.
         static bool firstRun = true;
         if (firstRun) {
             thetaPIDController.Reset(currentRotation);
             firstRun = false;
         }
 
-        // Calculate the angular velocity based on the error between the current rotation and the target rotation.
+        /**
+         * Calculate the angular velocity based on the error between the
+         * current rotation and the target rotation.
+         */
         angVel = units::radians_per_second_t(
             thetaPIDController.Calculate(currentRotation, currentRotation + angleToTurn)
         );
@@ -232,6 +256,7 @@ void Drive::execManual() {
         velocities = { xVel, yVel, angVel };
     }
 
+    // Just for feedback.
     targetPose = getPose();
 
     // Set the modules to drive at the given velocities.
@@ -241,25 +266,76 @@ void Drive::execManual() {
 void Drive::execTrajectory() {
     units::second_t time(trajectoryTimer.Get());
 
+    int actionRes = 0;
+    bool execAction = false;
+
+    // If we've got another action to go.
+    if (trajectoryActionIter != trajectory->getActions().cend()) {
+        const auto& [action_time, actions] = *trajectoryActionIter;
+
+        // Check if it's time to execute the action.
+        if (time >= action_time) {
+            execAction = true;
+
+            // Loop through the available actions.
+            for (auto it(trajectoryActions->cbegin()); it != trajectoryActions->cend(); ++it) {
+                const auto& [id, action] = *it;
+
+                // Narrow the list down to only actions that have not been completed yet.
+                if (std::find(doneTrajectoryActions.cbegin(), doneTrajectoryActions.cend(), id) == doneTrajectoryActions.cend()) {
+                    // If the action's bit is set in the bit field.
+                    if (actions & id) {
+                        // Execute the action.
+                        Action::Result res = action->process();
+
+                        // If the action has completed.
+                        if (res == Action::Result::DONE) {
+                            // Remember that it's done.
+                            doneTrajectoryActions.push_back(id);
+                        }
+
+                        actionRes += res;
+                    }
+                }
+            }
+        }
+    }
+
+    // Stop the trajectory because an action is still running.
+    if (actionRes) {
+        trajectoryTimer.Stop();
+    }
+    // Continue/Resume the trajectory because the actions are done.
+    else {
+        // Increment the action if an action was just finished.
+        if (execAction) {
+            ++trajectoryActionIter;
+            doneTrajectoryActions.clear();
+        }
+        trajectoryTimer.Start();
+    }
+
+    // If the trajectory is done, then stop it.
     if (time > trajectory->getDuration() && driveController.AtReference()) {
         driveMode = DriveMode::STOPPED;
         return;
     }
 
-    // Get the current state of the robot on the trajectory.
+    // Sample the trajectory at the current time for the desired state of the robot.
     Trajectory::State state(trajectory->sample(time));
 
+    // Adjust the rotation because everything about this robot is 90 degrees off D:
     state.rotation = state.rotation.Degrees() - 90_deg;
 
     // The current pose of the robot.
     frc::Pose2d currentPose(getPose());
 
-    // The desired change in position of the robot.
+    // The desired position delta of the robot.
     units::meter_t dx(state.xPos - currentPose.X()),
                    dy(state.yPos - currentPose.Y());
 
-    // The angle which the robot should be driving at.
-    frc::Rotation2d heading(units::math::atan2(dy, dx)/* - 90_deg*/);
+    // The angle at which the robot should be driving at.
+    frc::Rotation2d heading(units::math::atan2(dy, dx));
 
     /**
      * Calculate the chassis velocities based on the error between the current
@@ -274,9 +350,10 @@ void Drive::execTrajectory() {
         )
     );
 
+    // Keep target pose for feedback.
     targetPose = frc::Pose2d(state.xPos, state.yPos, state.rotation);
 
-    // Log motion to CSV file.
+    // Log motion to CSV file for debugging.
     trajectoryMotionFile << time.value() << ','
                          << currentPose.X().value() << ','
                          << currentPose.Y().value() << ','
@@ -313,8 +390,10 @@ void Drive::makeBrick() {
 }
 
 void Drive::configMagneticEncoders() {
-    // Only allow configuration in crater mode because configuring them
-    // accidentally would be D:
+    /**
+     * Only allow configuration in crater mode because configuring them
+     * accidentally would be D:
+     */
     if (!settings.isCraterMode) {
         return;
     }
@@ -322,11 +401,12 @@ void Drive::configMagneticEncoders() {
     for (std::size_t i = 0; i < swerveModules.size(); i++) {
         /**
          * Get the current rotation of the swerve modules to save as the
-         * forward angle of the module.
+         * forward angle of the module. This is a necessary step because
+         * when installed, each magnetic encoder has its own offset.
          */
         units::radian_t angle(swerveModules.at(i)->getRawRotation());
         
-        // Set that as the new offset angle.
+        // Set the current angle as the new offset angle.
         offsets.at(i) = angle;
     }
 
@@ -353,7 +433,7 @@ bool Drive::readOffsetsFile() {
         // Convert the line string to a number.
         double num = std::atof(line.c_str());
         
-        // Set the offset in the array to the parsed number.
+        // Set the offset in the array to the parsed number (saved in radians).
         offsets.at(i) = units::radian_t(num);
         
         // Increment the index.
@@ -370,16 +450,18 @@ void Drive::writeOffsetsFile() {
     // Clear the contents of the file.
     offsetsFile.clear();
 
-    // Write each offset to the file.
+    // Write each offset to the file (in radians).
     for (units::radian_t offset : offsets) {
         offsetsFile << offset.value() << '\n';
     }
 }
 
 void Drive::applyOffsets() {
-    for (unsigned i = 0; i < swerveModules.size(); i++) {
-        // The offsets will be 90 degrees off because 0 degeres on a
-        // graph translates to right on the drivetrain.
+    for (std::size_t i = 0; i < swerveModules.size(); i++) {
+        /**
+         * The offsets will be 90 degrees off because EVERYTHING about
+         * this robot is 90 degrees off!
+         */
         swerveModules.at(i)->setOffset(offsets.at(i) - 90_deg);
     }
 }
@@ -394,7 +476,7 @@ void Drive::setModuleStates(frc::ChassisSpeeds speeds) {
     // Store velocities for feedback.
     chassisSpeeds = speeds;
 
-    // Generate module states using the chassis velocities.
+    // Generate individual module states using the chassis velocities.
     wpi::array<frc::SwerveModuleState, 4> moduleStates(kinematics.ToSwerveModuleStates(speeds));
     
     // Set the states of the individual modules.

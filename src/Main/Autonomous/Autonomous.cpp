@@ -4,7 +4,12 @@
 Autonomous::Autonomous(Drive* drive)
 : drive(drive) { }
 
-Autonomous::~Autonomous() { }
+Autonomous::~Autonomous() {
+    for (const auto& [id, action] : actions) {
+        delete action;
+        (void)id;
+    }
+}
 
 void Autonomous::resetToMode(MatchMode mode) {
     delayTimer.Reset();
@@ -51,7 +56,7 @@ void Autonomous::doNothing() {
 
 void Autonomous::line() {
     if (step == 0) {
-        drive->runTrajectory(lineTrajectory);
+        drive->runTrajectory(lineTrajectory, actions);
         ++step;
     }
     else if (step == 1 && drive->isFinished()) {
@@ -61,7 +66,7 @@ void Autonomous::line() {
 
 void Autonomous::greatHallwayAdventure() {
     if (step == 0) {
-        drive->runTrajectory(greatHallwayAdventureTrajectory);
+        drive->runTrajectory(greatHallwayAdventureTrajectory, actions);
         ++step;
     }
     else if (step == 1 && drive->isFinished()) {
@@ -71,7 +76,7 @@ void Autonomous::greatHallwayAdventure() {
 
 void Autonomous::demoLong() {
     if (step == 0) {
-        drive->runTrajectory(demoLongTrajectory);
+        drive->runTrajectory(demoLongTrajectory, actions);
         ++step;
     }
     else if (step == 1 && drive->isFinished()) {
@@ -103,4 +108,40 @@ void Autonomous::sendFeedback() {
     sendAutoMode(AutoMode::DEMO_LONG, "Demo Long");
 
     Feedback::sendString("thunderdashboard", "auto_list", buffer);
+}
+
+Autonomous::WaitABitAction::WaitABitAction() {
+    timer.Reset();
+    timer.Start();
+}
+
+Autonomous::WaitABitAction::~WaitABitAction() { }
+
+Action::Result Autonomous::WaitABitAction::process() {
+    if (timer.Get() >= 3_s) {
+        return Result::DONE;
+        timer.Reset();
+        timer.Start();
+    }
+    else {
+        return Result::WORKING;
+    }
+}
+
+Autonomous::WaitABitLongerAction::WaitABitLongerAction() {
+    timer.Reset();
+    timer.Start();
+}
+
+Autonomous::WaitABitLongerAction::~WaitABitLongerAction() { }
+
+Action::Result Autonomous::WaitABitLongerAction::process() {
+    if (timer.Get() >= 5_s) {
+        return Result::DONE;
+        timer.Reset();
+        timer.Start();
+    }
+    else {
+        return Result::WORKING;
+    }
 }

@@ -3,8 +3,9 @@
 #include <Basic/Mechanism.h>
 #include <Hardware/HardwareManager.h>
 #include <Drive/SwerveModule.h>
-#include <Drive/Trajectory.h>
+#include <Trajectory/Trajectory.h>
 #include <Basic/Feedback.h>
+#include <Autonomous/Action.h>
 
 #include <frc/geometry/Transform2d.h>
 #include <frc/geometry/Translation2d.h>
@@ -28,6 +29,8 @@
 #include <wpi/numbers>
 #include <array>
 #include <fstream>
+#include <map>
+#include <algorithm>
 #include <frc/Timer.h>
 
 // The width of the robot.
@@ -35,7 +38,10 @@
 // The length of the robot.
 #define ROBOT_LENGTH 0.66_m
 
+// The maximum angular velocity during auto.
 #define DRIVE_AUTO_MAX_ANGULAR_VELOCITY 3.14_rad_per_s
+
+// The maximum angular acceleration during auto.
 #define DRIVE_AUTO_MAX_ANGULAR_ACCELERATION (3.14_rad_per_s_sq)
 
 class Drive : public Mechanism {
@@ -48,8 +54,12 @@ public:
     void doPersistentConfiguration() override;
     void resetToMode(MatchMode mode) override;
 
+    /**
+     * A number of flags that specify different control features
+     * of the robot during manual control.
+     */
     enum ControlFlag {
-        NONE = 0,
+        NONE          = 0,
         FIELD_CENTRIC = 1 << 0,
         VICE_GRIP     = 1 << 1,
         BRICK         = 1 << 2,
@@ -70,7 +80,7 @@ public:
     /**
      * Runs a trajectory.
      */
-    void runTrajectory(const Trajectory& trajectory);
+    void runTrajectory(const Trajectory& trajectory, const std::map<u_int32_t, Action*>& actionMap);
 
     /**
      * Returns whether the current process is finished or not.
@@ -83,7 +93,8 @@ public:
     void zeroRotation();
 
     /**
-     * Calibrates the IMU.
+     * Calibrates the IMU (Pauses the robot for 4 seconds while it
+     * calibrates).
      */
     void calibrateIMU();
 
@@ -93,17 +104,18 @@ public:
     bool isIMUCalibrated();
 
     /**
-     * Resets the position and rotation of the drivetrain on the field.
+     * Resets the position and rotation of the drivetrain on the field
+     * to a specified pose.
      */
     void resetOdometry(frc::Pose2d pose = frc::Pose2d());
 
     /**
-     * Returns the coordinates of the robot on the field.
+     * Returns the position and rotation of the robot on the field.
      */
     frc::Pose2d getPose();
 
     /**
-     * Returns the rotation of the robot on the field.
+     * Returns the raw rotation of the robot as recorded by the IMU.
      */
     frc::Rotation2d getRotation();
 
@@ -114,17 +126,17 @@ private:
     void updateOdometry();
 
     /**
-     * Executes the process for when the drivetrain is stopped.
+     * Executes instructions for when the robot is stopped.
      */
     void execStopped();
 
     /**
-     * Executes the process for when the drivetrain is in manual control.
+     * Executes the instructions for when the robot is in manual control.
      */
     void execManual();
 
     /**
-     * Executes the process for when the drivetrain is running a trajectory.
+     * Executes the instructions for when the robot is running a trajectory.
      */
     void execTrajectory();
 
@@ -135,17 +147,17 @@ private:
 
     /**
      * Applies the current rotation of the swerve modules as the offset of the
-     * magnetic encoders.
+     * magnetic encoders (THIS FUNCTION CAN MESS THINGS UP. USE CAREFULLY).
      */
     void configMagneticEncoders();
 
     /**
-     * Reads the magnetic encoder offsets file.
+     * Reads the magnetic encoder offsets from the file on the RoboRIO.
      */
     bool readOffsetsFile();
 
     /**
-     * Writes the current magnetic encoder offsets into the file.
+     * Writes the current magnetic encoder offsets to the file on the RoboRIO.
      */
     void writeOffsetsFile();
 
@@ -164,10 +176,9 @@ private:
      */
     void setModuleStates(frc::ChassisSpeeds speeds);
 
-    // The IMU.
+    // The IMU that keeps track of the robot's rotation.
     HardwareManager::DriveIMU imu;
 
-    // Whether the IMU is calibrated.
     bool imuCalibrated = false;
 
     // The locations of the swerve modules on the robot.
@@ -190,13 +201,13 @@ private:
     std::array<units::radian_t, 4> offsets { 0_rad, 0_rad, 0_rad, 0_rad };
 
     /**
-     * The helper class that can be used to convert chassis speeds into swerve
+     * The helper class that it used to convert chassis speeds into swerve
      * module states.
      */
     frc::SwerveDriveKinematics<4> kinematics { locations };
 
     /**
-     * The class that will handle tracking the position of the robot on the
+     * The class that handles tracking the position of the robot on the
      * field during the match.
      */
     frc::SwerveDriveOdometry<4> odometry { kinematics, getRotation() };
@@ -223,13 +234,22 @@ private:
     // The trajectory that is currently being run.
     const Trajectory* trajectory = nullptr;
 
+    // The available actions.
+    const std::map<u_int32_t, Action*>* trajectoryActions = nullptr;
+
+    // Actions that are completed.
+    std::vector<u_int32_t> doneTrajectoryActions;
+
+    // The current action.
+    std::map<units::second_t, u_int32_t>::const_iterator trajectoryActionIter;
+
     frc::Timer trajectoryTimer;
 
     // PID Controller for X and Y axis drivetrain movement.
     frc::PIDController xPIDController { 0.5, 0.0, 0.02 },
                        yPIDController { 0.5, 0.0, 0.02 };
 
-    // PID Controller for the angular drivetrain movement.
+    // PID Controller for angular drivetrain movement.
     frc::ProfiledPIDController<units::radians> thetaPIDController {
         2.5, 0.0, 0.0,
         frc::TrapezoidProfile<units::radians>::Constraints(DRIVE_AUTO_MAX_ANGULAR_VELOCITY, DRIVE_AUTO_MAX_ANGULAR_ACCELERATION)
@@ -238,8 +258,10 @@ private:
     // The drive controller that will handle the drivetrain movement.
     frc::HolonomicDriveController driveController;
 
+    // Feedback variables.
     frc::ChassisSpeeds chassisSpeeds { 0_mps, 0_mps, 0_rad_per_s };
     frc::Pose2d targetPose;
 
+    // CSV File on the RoboRIO to log drivetrain motion when running a trajectory.
     std::ofstream trajectoryMotionFile { "/home/lvuser/trajectory_motion.csv" };
 };
