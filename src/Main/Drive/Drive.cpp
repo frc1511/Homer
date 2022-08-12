@@ -324,6 +324,11 @@ void Drive::execTrajectory() {
     // Sample the trajectory at the current time for the desired state of the robot.
     Trajectory::State state(trajectory->sample(time));
 
+    // Don't be moving if an action is being worked on.
+    if (actionRes) {
+        state.velocity = 0_mps;
+    }
+
     // Adjust the rotation because everything about this robot is 90 degrees off D:
     state.rotation = state.rotation.Degrees() - 90_deg;
 

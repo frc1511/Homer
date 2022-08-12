@@ -4,18 +4,14 @@
 Autonomous::Autonomous(Drive* drive)
 : drive(drive) { }
 
-Autonomous::~Autonomous() {
-    for (const auto& [id, action] : actions) {
-        delete action;
-        (void)id;
-    }
-}
+Autonomous::~Autonomous() = default;
 
 void Autonomous::resetToMode(MatchMode mode) {
     delayTimer.Reset();
     delayTimer.Start();
     autoTimer.Reset();
     autoTimer.Start();
+
     step = 0;
 }
 
@@ -110,36 +106,19 @@ void Autonomous::sendFeedback() {
     Feedback::sendString("thunderdashboard", "auto_list", buffer);
 }
 
-Autonomous::WaitABitAction::WaitABitAction() {
+Autonomous::PauseAction::PauseAction(units::second_t dur)
+: duration(dur) {
     timer.Reset();
     timer.Start();
 }
 
-Autonomous::WaitABitAction::~WaitABitAction() { }
+Autonomous::PauseAction::~PauseAction() = default;
 
-Action::Result Autonomous::WaitABitAction::process() {
-    if (timer.Get() >= 3_s) {
-        return Result::DONE;
+Action::Result Autonomous::PauseAction::process() {
+    if (timer.Get() >= duration) {
         timer.Reset();
         timer.Start();
-    }
-    else {
-        return Result::WORKING;
-    }
-}
-
-Autonomous::WaitABitLongerAction::WaitABitLongerAction() {
-    timer.Reset();
-    timer.Start();
-}
-
-Autonomous::WaitABitLongerAction::~WaitABitLongerAction() { }
-
-Action::Result Autonomous::WaitABitLongerAction::process() {
-    if (timer.Get() >= 5_s) {
         return Result::DONE;
-        timer.Reset();
-        timer.Start();
     }
     else {
         return Result::WORKING;
