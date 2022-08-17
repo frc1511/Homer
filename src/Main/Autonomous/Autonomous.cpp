@@ -33,8 +33,14 @@ void Autonomous::process() {
         case AutoMode::GREAT_HALLWAY_ADVENTURE:
             greatHallwayAdventure();
             break;
-        case AutoMode::DEMO_LONG:
-            demoLong();
+        case AutoMode::DEMO_GRATEFUL_RED:
+            gratefulRed();
+            break;
+        case AutoMode::GREAT_G3_ADVENTURE_AWAY:
+            greatG3AdventureAway();
+            break;
+        case AutoMode::GREAT_G3_ADVENTURE_BACK:
+            greatG3AdventureBack();
             break;
     }
 }
@@ -70,9 +76,29 @@ void Autonomous::greatHallwayAdventure() {
     }
 }
 
-void Autonomous::demoLong() {
+void Autonomous::gratefulRed() {
     if (step == 0) {
-        drive->runTrajectory(demoLongTrajectory, actions);
+        drive->runTrajectory(gratefulRedTrajectory, actions);
+        ++step;
+    }
+    else if (step == 1 && drive->isFinished()) {
+        ++step;
+    }
+}
+
+void Autonomous::greatG3AdventureAway() {
+    if (step == 0) {
+        drive->runTrajectory(greatG3AdventureAwayTrajectory, actions);
+        ++step;
+    }
+    else if (step == 1 && drive->isFinished()) {
+        ++step;
+    }
+}
+
+void Autonomous::greatG3AdventureBack() {
+    if (step == 0) {
+        drive->runTrajectory(greatG3AdventureBackTrajectory, actions);
         ++step;
     }
     else if (step == 1 && drive->isFinished()) {
@@ -101,7 +127,9 @@ void Autonomous::sendFeedback() {
     sendAutoMode(AutoMode::DO_NOTHING, "Do Nothing?!? Nooooooo!!!!");
     sendAutoMode(AutoMode::LINE, "Drive forward 6m and drive back while turning");
     sendAutoMode(AutoMode::GREAT_HALLWAY_ADVENTURE, "Drive Forward or Something");
-    sendAutoMode(AutoMode::DEMO_LONG, "Demo Long");
+    sendAutoMode(AutoMode::DEMO_GRATEFUL_RED, "Grateful Red Demo Path");
+    sendAutoMode(AutoMode::GREAT_G3_ADVENTURE_AWAY, "Leave G3");
+    sendAutoMode(AutoMode::GREAT_G3_ADVENTURE_BACK, "Enter G3");
 
     Feedback::sendString("thunderdashboard", "auto_list", buffer);
 }
@@ -109,18 +137,29 @@ void Autonomous::sendFeedback() {
 Autonomous::PauseAction::PauseAction(units::second_t dur)
 : duration(dur) {
     timer.Reset();
-    timer.Start();
+    timer.Stop();
 }
 
 Autonomous::PauseAction::~PauseAction() = default;
 
 Action::Result Autonomous::PauseAction::process() {
+    timer.Start();
+
     if (timer.Get() >= duration) {
         timer.Reset();
-        timer.Start();
+        timer.Stop();
         return Result::DONE;
     }
-    else {
-        return Result::WORKING;
-    }
+
+    return Result::WORKING;
+}
+
+Autonomous::MessageAction::MessageAction(const char* _msg)
+: msg(_msg) { }
+
+Autonomous::MessageAction::~MessageAction() = default;
+
+Action::Result Autonomous::MessageAction::process() {
+    std::cout << msg;
+    return Action::Result::DONE;
 }

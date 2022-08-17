@@ -4,10 +4,10 @@
 #define ENCODER_OFFSETS_FILE_NAME "/home/lvuser/magnetic_encoder_offsets.txt"
 
 // The maximum velocity during manual control.
-#define DRIVE_MANUAL_MAX_VELOCITY 1_mps
+#define DRIVE_MANUAL_MAX_VELOCITY 2_mps
 
 // The maximum angular velocity during manual control.
-#define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 90_deg_per_s
+#define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 180_deg_per_s
 
 // The angle at which vice grip doesn't care anymore.
 #define ROTATION_THRESHOLD 1_deg

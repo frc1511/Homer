@@ -226,6 +226,7 @@ void SwerveModule::sendFeedback(std::size_t moduleIndex) {
     Feedback::sendDouble("Drive Module", "module " + i + " target rotation (deg)", units::degree_t(targetRotation).value());
     Feedback::sendDouble("Drive Module", "module " + i + " drive encoder", getRawDriveEncoder());
     Feedback::sendDouble("Drive Module", "module " + i + " velocity (m/s)", getDriveVelocity().value());
-
+    Feedback::sendDouble("Drive Module", "module " + i + " turning motor temp (F)", turningMotor.getTemperature().value());
+    Feedback::sendDouble("Drive Module", "module " + i + " drive motor temp (F)", driveMotor.getTemperature().value());
     // hi jeff
 }
