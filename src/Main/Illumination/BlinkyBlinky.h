@@ -33,6 +33,7 @@ public:
         CALIBRATING,
         BRICK,
         VICE_GRIP,
+        RECORDING,
         DISABLED,
     };
 

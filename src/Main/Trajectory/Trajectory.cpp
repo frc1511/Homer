@@ -87,7 +87,7 @@ Trajectory::State Trajectory::sample(units::second_t time) const {
     auto [lowerTime, lowerState] = *lowerBound;
 
     // Return the next state if is's close enough.
-    if (units::math::abs(upperTime - lowerTime) < 0.03_s) {
+    if (units::math::abs(upperTime - lowerTime) < 50_ms) {
         return upperState;
     }
 

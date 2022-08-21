@@ -52,6 +52,7 @@ void BlinkyBlinky::process() {
             // Turn the LEDs off D:
             setColor({0, 0, 0});
             break;
+        case LEDMode::RECORDING:
         case LEDMode::RAINBOW:
             rainbow();
             break;
@@ -171,6 +172,9 @@ void BlinkyBlinky::sendFeedback() {
             break;
         case LEDMode::VICE_GRIP:
             modeString = "vice grip";
+            break;
+        case LEDMode::RECORDING:
+            modeString = "recording";
             break;
         case LEDMode::DISABLED:
             modeString = "disabled";

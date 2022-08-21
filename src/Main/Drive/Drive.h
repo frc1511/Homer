@@ -4,6 +4,7 @@
 #include <Hardware/HardwareManager.h>
 #include <Drive/SwerveModule.h>
 #include <Trajectory/Trajectory.h>
+#include <Trajectory/TrajectoryRecorder.h>
 #include <Basic/Feedback.h>
 #include <Autonomous/Action.h>
 
@@ -63,6 +64,7 @@ public:
         FIELD_CENTRIC = 1 << 0,
         VICE_GRIP     = 1 << 1,
         BRICK         = 1 << 2,
+        RECORDING     = 1 << 3,
     };
 
     /**
@@ -230,6 +232,11 @@ private:
 
     // The data concerning manual control.
     ManualControlData manualData {};
+
+    // Used to record trajectories when in manual control.
+    TrajectoryRecorder trajectoryRecorder;
+
+    frc::Timer teleopTimer;
 
     // The trajectory that is currently being run.
     const Trajectory* trajectory = nullptr;

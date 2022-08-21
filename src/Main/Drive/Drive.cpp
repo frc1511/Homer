@@ -57,8 +57,9 @@ void Drive::resetToMode(MatchMode mode) {
 
     if (mode == MatchMode::DISABLED) {
         // Brake all motors when disabled (no runaway robots anymore).
-        setIdleMode(ThunderMotorController::IdleMode::BRAKE);
+        setIdleMode(ThunderMotorController::IdleMode::COAST);
 
+        teleopTimer.Stop();
         trajectoryTimer.Stop();
     }
     else {
@@ -68,21 +69,34 @@ void Drive::resetToMode(MatchMode mode) {
         /**
          * Calibrate the IMU if not already calibrated. This will cause the
          * robot to pause for 4 seconds while it waits for it to calibrate, so
-         * the IMU should be calibrated BEFORE the match begins.
+         * the IMU should always be calibrated before the match begins.
          */
         if (!isIMUCalibrated()) {
             calibrateIMU();
         }
 
+        // Reset the teleop timer.
+        teleopTimer.Reset();
+
+        if (mode == MatchMode::TELEOP) {
+            teleopTimer.Start();
+
+            // Clear the recorded trajectory.
+            trajectoryRecorder.clear();
+        }
+
         // Reset the trajectory timer.
         trajectoryTimer.Reset();
-        trajectoryTimer.Start();
 
-        // Clear the motion profile CSV file.
-        trajectoryMotionFile.clear();
-        
-        // Write the header of the CSV file.
-        trajectoryMotionFile << "time,x_pos,y_pos,dest_x_pos,dest_y_pos,vel_x,vel_y,vel_ang,ang,dest_ang\n";
+        if (mode == MatchMode::AUTO) {
+            trajectoryTimer.Start();
+
+            // Clear the motion profile CSV file.
+            trajectoryMotionFile.clear();
+            
+            // Write the header of the CSV file.
+            trajectoryMotionFile << "time,x_pos,y_pos,dest_x_pos,dest_y_pos,vel_x,vel_y,vel_ang,ang,dest_ang\n";
+        }
     }
 }
 
@@ -243,23 +257,34 @@ void Drive::execManual() {
         );
     }
 
+    frc::Pose2d currPose(getPose());
+
     frc::ChassisSpeeds velocities;
     
     // Generate chassis speeds depending on the control mode.
 
     if (manualData.flags & ControlFlag::FIELD_CENTRIC) {
         // Generate chassis speeds based on the rotation of the robot relative to the field.
-        velocities = frc::ChassisSpeeds::FromFieldRelativeSpeeds(xVel, yVel, angVel, getPose().Rotation());
+        velocities = frc::ChassisSpeeds::FromFieldRelativeSpeeds(xVel, yVel, angVel, currPose.Rotation());
     }
     else {
         velocities = { xVel, yVel, angVel };
     }
 
     // Just for feedback.
-    targetPose = getPose();
+    targetPose = currPose;
 
     // Set the modules to drive at the given velocities.
     setModuleStates(velocities);
+
+    if (manualData.flags & ControlFlag::RECORDING) {
+        static units::second_t prevTime = 0_s;
+        units::second_t currTime(teleopTimer.Get());
+
+        trajectoryRecorder.addState(currTime - prevTime, currPose);
+
+        prevTime = currTime;
+    }
 }
 
 void Drive::execTrajectory() {

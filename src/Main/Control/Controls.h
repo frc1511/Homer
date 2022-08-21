@@ -28,6 +28,8 @@ private:
     bool driveRobotCentric = false;
     unsigned driveCtrlFlags = Drive::ControlFlag::NONE;
 
+    bool driveRecording = false;
+
     Drive* drive;
     BlinkyBlinky* blinkyBlinky;
 };

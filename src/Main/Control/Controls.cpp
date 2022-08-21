@@ -43,6 +43,10 @@ void Controls::doDrive() {
         driveCtrlFlags |= Drive::ControlFlag::VICE_GRIP;
     }
 
+    if (driveRecording) {
+        driveCtrlFlags |= Drive::ControlFlag::RECORDING;
+    }
+
     static bool whichCamera = false;
     if (toggleCamera) {
         whichCamera = !whichCamera;
@@ -57,9 +61,9 @@ void Controls::doDrive() {
         drive->zeroRotation();
     }
 
-    double finalXVel = 0.0;
-    double finalYVel = 0.0;
-    double finalAngVel = 0.0;
+    double finalXVel = 0.0,
+           finalYVel = 0.0,
+           finalAngVel = 0.0;
 
     // Improves the joystick axis to be smoother and easier to control.
     auto improveAxis = [](double axis) -> double {
@@ -105,9 +109,10 @@ void Controls::doAux() {
 void Controls::doSwitchPanel() {
     settings.isCraterMode = switchPanel.GetRawButton(1);
     driveRobotCentric = switchPanel.GetRawButton(2);
+    driveRecording = switchPanel.GetRawButton(3);
 
     if (blinkyBlinky) {
-        if (switchPanel.GetRawButton(3)) {
+        if (switchPanel.GetRawButton(4)) {
             blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::OFF);
         }
         else if (!drive->isIMUCalibrated()) {
@@ -115,6 +120,9 @@ void Controls::doSwitchPanel() {
         }
         else if (getCurrentMode() == MatchMode::DISABLED) {
             blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::DISABLED);
+        }
+        else if (driveRecording) {
+            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::RECORDING);
         }
         else if (settings.isCraterMode) {
             blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::CRATER_MODE);
