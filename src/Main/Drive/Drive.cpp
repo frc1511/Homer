@@ -156,7 +156,6 @@ bool Drive::isFinished() const {
 
 void Drive::zeroRotation() {
     resetOdometry(getPose());
-    imu.reset();
 }
 
 void Drive::calibrateIMU() {
@@ -250,7 +249,7 @@ void Drive::execManual() {
 
     if (manualData.flags & ControlFlag::FIELD_CENTRIC) {
         // Generate chassis speeds based on the rotation of the robot relative to the field.
-        velocities = frc::ChassisSpeeds::FromFieldRelativeSpeeds(xVel, yVel, angVel, getRotation());
+        velocities = frc::ChassisSpeeds::FromFieldRelativeSpeeds(xVel, yVel, angVel, getPose().Rotation());
     }
     else {
         velocities = { xVel, yVel, angVel };
