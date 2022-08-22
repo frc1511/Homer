@@ -16,16 +16,19 @@ void Controls::process() {
 }
 
 void Controls::doDrive() {
-    bool brickDrive = driveController.getCrossButton();
-    bool viceGrip = driveController.getCircleButton();
-    bool toggleCamera = driveController.getSquareButton();
+    using DriveButton = HardwareManager::DriveGameController::Button;
+    using DriveAxis = HardwareManager::DriveGameController::Axis;
 
-    double xVel = driveController.getLeftXAxis();
-    double yVel = driveController.getLeftYAxis();
-    double angVel = driveController.getRightXAxis();
+    bool brickDrive = driveController.getButton(DriveButton::CROSS);
+    bool viceGrip = driveController.getButton(DriveButton::CIRCLE);
+    bool toggleCamera = driveController.getButton(DriveButton::SQUARE);
 
-    bool zeroRotation = driveController.getOptionsButton();
-    bool calGyro = driveController.getShareButton();
+    double xVel = driveController.getAxis(DriveAxis::LEFT_X);
+    double yVel = driveController.getAxis(DriveAxis::LEFT_Y);
+    double angVel = driveController.getAxis(DriveAxis::RIGHT_X);
+
+    bool zeroRotation = driveController.getButtonPressed(DriveButton::OPTIONS);
+    bool calGyro = driveController.getButtonPressed(DriveButton::SHARE);
 
     bool wasBrickDrive = driveCtrlFlags & Drive::ControlFlag::BRICK;
     
@@ -97,22 +100,28 @@ void Controls::doDrive() {
 bool Controls::getShouldPersistConfig() {
     doSwitchPanel();
 
+    using DriveButton = HardwareManager::DriveGameController::Button;
+    using AuxButton = HardwareManager::AuxGameController::Button;
+
     return settings.isCraterMode
-        && driveController.getTriangleButton() && driveController.getDPad() == 180
-        && auxController.getCrossButton() && auxController.getDPad() == 0;
+        && driveController.getButton(DriveButton::TRIANGLE) && driveController.getDPad() == 180
+        && auxController.getButton(AuxButton::CROSS) && auxController.getDPad() == 0;
 }
 
 void Controls::doAux() {
+    // using AuxButton = HardwareManager::AuxGameController::Button;
+    // using AuxAxis = HardwareManager::AuxGameController::Axis;
+
     // D:
 }
 
 void Controls::doSwitchPanel() {
-    settings.isCraterMode = switchPanel.GetRawButton(1);
-    driveRobotCentric = switchPanel.GetRawButton(2);
-    driveRecording = switchPanel.GetRawButton(3);
+    settings.isCraterMode = switchPanel.getButton(1);
+    driveRobotCentric = switchPanel.getButton(2);
+    driveRecording = switchPanel.getButton(3);
 
     if (blinkyBlinky) {
-        if (switchPanel.GetRawButton(4)) {
+        if (switchPanel.getButton(4)) {
             blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::OFF);
         }
         else if (!drive->isIMUCalibrated()) {

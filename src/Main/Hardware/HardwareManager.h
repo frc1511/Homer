@@ -1,8 +1,8 @@
 #pragma once
 
+#include <Wrappers/GameController/GameController.h>
 #include <Wrappers/GameController/PS4Controller.h>
-#include <Wrappers/GameController/XBoxController.h>
-#include <Wrappers/GameController/Empty.h>
+#include <Wrappers/GameController/XboxController.h>
 #include <Wrappers/MotorController/Rev/CANSparkMax.h>
 #include <Wrappers/MotorController/Empty.h>
 #include <Wrappers/MagneticEncoder/CTRE/CANCoder.h>

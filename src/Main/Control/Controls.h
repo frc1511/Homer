@@ -17,9 +17,9 @@ public:
     bool getShouldPersistConfig();
     
 private:
-    HardwareManager::DriveGameController driveController {0};
-    HardwareManager::AuxGameController auxController {1};
-    frc::Joystick switchPanel {2};
+    ThunderGameController driveController {0};
+    ThunderGameController auxController {1};
+    ThunderGameController switchPanel {2};
 
     void doDrive();
     void doAux();

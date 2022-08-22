@@ -1,45 +1,38 @@
 #pragma once
 
-#include <Wrappers/GameController/GameController.h>
-#include <frc/Joystick.h>
-
-class ThunderXBoxController : public ThunderGameController {
+class ThunderXboxController {
 public:
-    ThunderXBoxController(int id);
-    ~ThunderXBoxController();
+    enum Button {
+        Y = 4,
+        B = 2,
+        A = 1,
+        X = 3,
 
-    inline bool getTriangleButton() { return getYButton(); }
-    inline bool getCircleButton()   { return getBButton(); }
-    inline bool getCrossButton()    { return getAButton(); }
-    inline bool getSquareButton()   { return getXButton(); }
+        TRIANGLE = Y,
+        CIRCLE = B,
+        CROSS = A,
+        SQUARE = X,
 
-    bool getYButton();
-    bool getBButton();
-    bool getAButton();
-    bool getXButton();
+        LEFT_BUMPER = 5,
+        RIGHT_BUMPER = 6,
 
-    double getLeftXAxis();
-    double getLeftYAxis();
-    double getRightXAxis();
-    double getRightYAxis();
+        BACK = 7,
+        START = 8,
 
-    bool getLeftBumper();
-    bool getRightBumper();
-    
-    double getLeftTrigger();
-    double getRightTrigger();
+        SHARE = BACK,
+        OPTIONS = START,
 
-    inline bool getShareButton()   { return getBackButton(); }
-    inline bool getOptionsButton() { return getStartButton(); }
+        LEFT_STICK = 11,
+        RIGHT_STICK = 12,
+    };
 
-    bool getBackButton();
-    bool getStartButton();
+    enum Axis {
+        LEFT_X = 0,
+        LEFT_Y = 1,
+        RIGHT_X = 4,
+        RIGHT_Y = 5,
 
-    bool getLeftStickButton();
-    bool getRightStickButton();
-
-    int getDPad();
-
-private:
-    frc::Joystick joystick;
+        LEFT_TRIGGER = 2,
+        RIGHT_TRIGGER = 3,
+    };
 };

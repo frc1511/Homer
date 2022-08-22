@@ -1,45 +1,38 @@
 #pragma once
 
-#include <Wrappers/GameController/GameController.h>
-#include <frc/Joystick.h>
-
-class ThunderPS4Controller : public ThunderGameController {
+class ThunderPS4Controller {
 public:
-    ThunderPS4Controller(int id);
-    ~ThunderPS4Controller();
+    enum Button {
+        TRIANGLE = 4,
+        CIRCLE = 3,
+        CROSS = 2,
+        SQUARE = 1,
 
-    bool getTriangleButton();
-    bool getCircleButton();
-    bool getCrossButton();
-    bool getSquareButton();
+        Y = TRIANGLE,
+        B = CIRCLE,
+        A = CROSS,
+        X = SQUARE,
 
-    inline bool getYButton() { return getTriangleButton(); }
-    inline bool getBButton() { return getCircleButton();   }
-    inline bool getAButton() { return getCrossButton();    }
-    inline bool getXButton() { return getSquareButton();   }
+        LEFT_BUMPER = 5,
+        RIGHT_BUMPER = 6,
 
-    double getLeftXAxis();
-    double getLeftYAxis();
-    double getRightXAxis();
-    double getRightYAxis();
+        SHARE = 9,
+        OPTIONS = 10,
 
-    bool getLeftBumper();
-    bool getRightBumper();
-    
-    double getLeftTrigger();
-    double getRightTrigger();
+        BACK = SHARE,
+        START = OPTIONS,
 
-    bool getShareButton();
-    bool getOptionsButton();
+        LEFT_STICK = 11,
+        RIGHT_STICK = 12,
+    };
 
-    inline bool getBackButton()  { return getShareButton(); }
-    inline bool getStartButton() { return getOptionsButton(); }
+    enum Axis {
+        LEFT_X = 0,
+        LEFT_Y = 1,
+        RIGHT_X = 2,
+        RIGHT_Y = 5,
 
-    bool getLeftStickButton();
-    bool getRightStickButton();
-
-    int getDPad();
-
-private:
-    frc::Joystick joystick;
+        LEFT_TRIGGER = 3,
+        RIGHT_TRIGGER = 4,
+    };
 };
