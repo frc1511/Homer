@@ -10,10 +10,8 @@
 #include <array>
 #include <map>
 
-#define LED_NUM_STRIP 20
-#define NUM_STRIPS 4
-#define LED_NUM_TOTAL 20//(NUM_STRIPS * LED_NUM_STRIP)
-// #define LED_NUM_TOTAL 40
+#define LED_NUM_TOTAL 160
+#define LED_ENABLED_NUM_TOTAL 100
 
 class BlinkyBlinky : public Mechanism {
 public:
@@ -42,7 +40,7 @@ public:
 private:
     frc::AddressableLED strip { PWM_BLINKY_BLINKY };
 
-    std::array<frc::AddressableLED::LEDData, LED_NUM_TOTAL> stripBuffer;
+    std::array<frc::AddressableLED::LEDData, LED_ENABLED_NUM_TOTAL> stripBuffer;
 
     enum class Strip : std::size_t {
         FRONT = 0,

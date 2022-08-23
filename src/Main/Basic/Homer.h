@@ -35,19 +35,19 @@ private:
     Autonomous autonomous { &drive };
 
 #ifndef TEST_BOARD
-    // BlinkyBlinky blinkyBlinky;
+    BlinkyBlinky blinkyBlinky;
 #endif
 
     Controls controls { &drive,
 #ifndef TEST_BOARD
-        // &blinkyBlinky,
+        &blinkyBlinky,
 #endif
     };
 
     std::vector<Mechanism*> allMechanisms {
-        &drive, &controls, &autonomous
+        &drive, &controls, &autonomous,
 #ifndef TEST_BOARD
-        // &blinkyBlinky,
+        &blinkyBlinky,
 #endif
     };
 };

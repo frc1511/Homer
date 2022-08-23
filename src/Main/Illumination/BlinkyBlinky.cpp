@@ -3,41 +3,41 @@
 static const ColorInterpolation kRedInterp(
     frc::Color::kDarkRed,
     frc::Color::kRed,
-    LED_NUM_TOTAL
+    LED_ENABLED_NUM_TOTAL
 );
 
 static const ColorInterpolation kBlueInterp(
     frc::Color::kNavy,
     frc::Color::kBlue,
-    LED_NUM_TOTAL
+    LED_ENABLED_NUM_TOTAL
 );
 
 static const ColorInterpolation kHomeDeoptInterp(
     {1, 0.0501960784313725, 0}, // Low: 255, 13, 0
     {1, 0.12156862745098, 0},   // High: 255, 77, 0
-    LED_NUM_TOTAL
+    LED_ENABLED_NUM_TOTAL
 );
 
 static const ColorInterpolation kCraterModeInterp(
     frc::Color::kDarkGreen,
     frc::Color::kGreen,
-    LED_NUM_TOTAL
+    LED_ENABLED_NUM_TOTAL
 );
 
 static const ColorInterpolation kCalibratingInterp(
     frc::Color::kPurple,
     frc::Color::kMagenta,
-    LED_NUM_TOTAL
+    LED_ENABLED_NUM_TOTAL
 );
 
 static const ColorInterpolation kDisabledInterp(
     {1, 0.0501960784313725, 0}, // Low: 255, 13, 0
     {1, 0.12156862745098, 0},   // High: 255, 77, 0
-    LED_NUM_TOTAL
+    LED_ENABLED_NUM_TOTAL
 );
 
 BlinkyBlinky::BlinkyBlinky() {
-    strip.SetLength(LED_NUM_TOTAL);
+    strip.SetLength(LED_ENABLED_NUM_TOTAL);
     strip.SetData(stripBuffer);
     strip.Start();
 }
@@ -50,7 +50,7 @@ void BlinkyBlinky::process() {
     switch (ledMode) {
         case LEDMode::OFF:
             // Turn the LEDs off D:
-            setColor({0, 0, 0});
+            setColor(frc::Color::kBlack);
             break;
         case LEDMode::RECORDING:
         case LEDMode::RAINBOW:
@@ -106,15 +106,16 @@ void BlinkyBlinky::setLEDMode(LEDMode mode) {
 #define DEAD_4_END 160
 
 void BlinkyBlinky::setPixel(std::size_t index, frc::Color color) {
-    // if ((index >= DEAD_1_START && index < DEAD_1_END) ||
-    //     (index >= DEAD_2_START && index < DEAD_2_END) ||
-    //     (index >= DEAD_3_START && index < DEAD_3_END) ||
-    //     (index >= DEAD_4_START && index < DEAD_4_END)) {
-    //     stripBuffer.at(index).SetLED(frc::Color::kBlack);
-    // }
-    // else {
-        stripBuffer[index].SetLED(color);
-    // }
+    // Turn off LEDs in the dead sections.
+    if ((index >= DEAD_1_START && index < DEAD_1_END) ||
+        (index >= DEAD_2_START && index < DEAD_2_END) ||
+        (index >= DEAD_3_START && index < DEAD_3_END) ||
+        (index >= DEAD_4_START && index < DEAD_4_END)) {
+        stripBuffer.at(index).SetLED(frc::Color::kBlack);
+    }
+    else {
+        stripBuffer.at(index).SetLED(color);
+    }
 }
 
 void BlinkyBlinky::setColor(frc::Color color) {
@@ -124,21 +125,38 @@ void BlinkyBlinky::setColor(frc::Color color) {
 }
 
 void BlinkyBlinky::setStrip(Strip strip, frc::Color color) {
-    for (std::size_t i = 0; i < LED_NUM_STRIP; i++) {
+    for (std::size_t i = 0; i < 40; i++) {
         setPixel(static_cast<std::size_t>(strip) + i, color);
     }
 }
 
 void BlinkyBlinky::setInterp(const ColorInterpolation& interp) {
+    setColor(frc::Color::kBlack);
+
+    std::size_t j = 0;
     for (std::size_t i = 0; i < LED_NUM_TOTAL; i -=- 1) {
-        setPixel(i, interp.getInterpolated(i, rgbOffset));
+        // Skip over dead sections.
+        if (i == DEAD_1_START) i = DEAD_1_END;
+        else if (i == DEAD_2_START) i = DEAD_2_END;
+        else if (i == DEAD_3_START) i = DEAD_3_END;
+
+        // Interpolate the color.
+        setPixel(i, interp.getInterpolated(j++, rgbOffset));
     }
 }
 
 void BlinkyBlinky::rainbow() {
-    // Rainbow :D
+    setColor(frc::Color::kBlack);
+
+    std::size_t j = 0;
     for (std::size_t i = 0; i < LED_NUM_TOTAL; i -=- 1) {
-        std::size_t hue = (hsvOffset + (i * 180 / LED_NUM_TOTAL)) % 180;
+        // Skip over dead sections.
+        if (i == DEAD_1_START) i = DEAD_1_END;
+        else if (i == DEAD_2_START) i = DEAD_2_END;
+        else if (i == DEAD_3_START) i = DEAD_3_END;
+
+        // Rainbow.
+        std::size_t hue = (hsvOffset + (j++ * 180 / LED_ENABLED_NUM_TOTAL)) % 180;
         setPixel(i, frc::Color::FromHSV(hue, 255, 128));
     }
 }
