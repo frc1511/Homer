@@ -9,13 +9,12 @@
 // The maximum angular velocity during manual control.
 #define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 180_deg_per_s
 
-// The angle at which vice grip doesn't care anymore.
-#define ROTATION_THRESHOLD 1_deg
-
 Drive::Drive()
 : driveController(
     [&]() -> frc::HolonomicDriveController {
+        // Set the angular PID controller range from -180 to 180 degrees.
         thetaPIDController.EnableContinuousInput(units::radian_t(-180_deg), units::radian_t(180_deg));
+        // Setup the drive controller with the individual axis PID controllers.
         return frc::HolonomicDriveController(xPIDController, yPIDController, thetaPIDController);
     } ()) {
 
@@ -48,7 +47,9 @@ void Drive::doPersistentConfiguration() {
 
 void Drive::resetToMode(MatchMode mode) {
     driveMode = DriveMode::STOPPED;
-    bool wasRecording = manualData.flags & ControlFlag::RECORDING;
+
+    ManualControlData lastManualData(manualData);
+    // Reset the manual control data.
     manualData = {};
 
     // This seems to be necessary. Don't ask me why.
@@ -57,13 +58,21 @@ void Drive::resetToMode(MatchMode mode) {
     }
 
     if (mode == MatchMode::DISABLED) {
-        // Brake all motors when disabled (no runaway robots anymore).
+        /**
+         * Coast all motors in disabled (good for transportation, however can
+         * lead to some runaway robots).
+         */
         setIdleMode(ThunderMotorController::IdleMode::COAST);
 
         teleopTimer.Stop();
         trajectoryTimer.Stop();
 
-        if (wasRecording) {
+        // If the drivetrain movement was being recorded before being disabled.
+        if (lastManualData.flags & ControlFlag::RECORDING) {
+            /**
+             * Export the recorded trajectory to a CSV file on the RoboRIO so
+             * it can be examined and/or played back later.
+             */
             trajectoryRecorder.writeToCSV("/home/lvuser/recorded_trajectory.csv");
         }
     }
@@ -104,6 +113,7 @@ void Drive::resetToMode(MatchMode mode) {
             trajectoryMotionFile << "time,x_pos,y_pos,dest_x_pos,dest_y_pos,vel_x,vel_y,vel_ang,ang,dest_ang\n";
         }
 
+        // Reset the position and rotation on the field.
         resetOdometry();
     }
 }
@@ -177,8 +187,9 @@ bool Drive::isFinished() const {
 }
 
 void Drive::zeroRotation() {
-    std::cout << "zeroed rotation\n";
     frc::Pose2d currPose(getPose());
+
+    // Reset the known rotation of the robot to zero degrees fahrenheit.
     resetOdometry(frc::Pose2d(currPose.X(), currPose.Y(), 0_deg));
 }
 
@@ -199,6 +210,10 @@ bool Drive::isIMUCalibrated() {
 }
 
 void Drive::resetOdometry(frc::Pose2d pose) {
+    /**
+     * Resets the position and rotation of the robot to a given pose
+     * while ofsetting for the IMU's recorded rotation.
+     */
     odometry.ResetPosition(pose, getRotation());
 }
 
@@ -214,12 +229,18 @@ frc::Rotation2d Drive::getRotation() {
 }
 
 void Drive::updateOdometry() {
-    // Track the position and rotation of the robot on the field.
+    /**
+     * Using the rotation of the robot and the state (velocity
+     * and rotation) of each swerve module, the odometry class is
+     * able to calculate the robot's approximate position and
+     * rotation on the field.
+     */
     odometry.Update(getRotation(),
         swerveModules.at(0)->getState(),
         swerveModules.at(1)->getState(),
         swerveModules.at(2)->getState(),
-        swerveModules.at(3)->getState());
+        swerveModules.at(3)->getState()
+    );
 }
 
 void Drive::execStopped() {
@@ -234,26 +255,33 @@ void Drive::execStopped() {
         makeBrick();
     }
 
+    // If recording, record the current state of the robot.
     if (manualData.flags & ControlFlag::RECORDING) {
         record_state();
     }
 }
 
 void Drive::execManual() {
-    // Chassis velocities from percentages of configured max velocities.
+    /**
+     * Calculate chassis velocities using percentages of the configured max
+     * manual control velocities.
+     */
     units::meters_per_second_t xVel = manualData.xPct * DRIVE_MANUAL_MAX_VELOCITY;
     units::meters_per_second_t yVel = manualData.yPct * DRIVE_MANUAL_MAX_VELOCITY;
     units::radians_per_second_t angVel = manualData.angPct * DRIVE_MANUAL_MAX_ANGULAR_VELOCITY;
+
+    frc::Pose2d currPose(getPose());
 
     /**
      * Vice grip allows for the robot to remain aligned with a vision target and ignore
      * manual angular velocity control.
      */
     if (manualData.flags & ControlFlag::VICE_GRIP) {
+        // No limelight on Homer right now D:
         // units::degree_t angleToTurn = -limelight->getAngleHorizontal();
         units::degree_t angleToTurn = 0_deg;
         
-        units::radian_t currentRotation(getRotation().Radians());
+        units::radian_t currentRotation(currPose.Rotation().Radians());
 
         // Reset the PID controller.
         static bool firstRun = true;
@@ -271,17 +299,15 @@ void Drive::execManual() {
         );
     }
 
-    frc::Pose2d currPose(getPose());
-
     frc::ChassisSpeeds velocities;
     
     // Generate chassis speeds depending on the control mode.
-
     if (manualData.flags & ControlFlag::FIELD_CENTRIC) {
         // Generate chassis speeds based on the rotation of the robot relative to the field.
         velocities = frc::ChassisSpeeds::FromFieldRelativeSpeeds(xVel, yVel, angVel, currPose.Rotation());
     }
     else {
+        // Chassis speeds are robot-centric.
         velocities = { xVel, yVel, angVel };
     }
 
@@ -291,6 +317,7 @@ void Drive::execManual() {
     // Set the modules to drive at the given velocities.
     setModuleStates(velocities);
 
+    // If recording, record the current state of the robot.
     if (manualData.flags & ControlFlag::RECORDING) {
         record_state();
     }
@@ -411,9 +438,13 @@ void Drive::record_state() {
     units::second_t currTime(teleopTimer.Get());
     frc::Pose2d currPose(getPose());
 
-    std::cout << "prev " << lastTeleopTime.value() << " curr " << currTime.value() << " diff " << (currTime - lastTeleopTime).value() << '\n';
-
-    trajectoryRecorder.addState(currTime - lastTeleopTime, frc::Pose2d(currPose.X(), currPose.Y(), currPose.Rotation().Degrees() + 90_deg));
+    // Add the state to the trajectory recorder.
+    trajectoryRecorder.addState(
+        // The delta time between logged states.
+        currTime - lastTeleopTime,
+        // Add 90 degrees because everything on this robot is 90 degrees off.
+        frc::Pose2d(currPose.X(), currPose.Y(), currPose.Rotation().Degrees() + 90_deg)
+    );
 
     lastTeleopTime = currTime;
 }
@@ -559,11 +590,11 @@ void Drive::sendFeedback() {
     // Feedback for the motion profile.
     Feedback::sendDouble("DriveCSV", "x_pos", pose.X().value());
     Feedback::sendDouble("DriveCSV", "y_pos", pose.Y().value());
-    Feedback::sendDouble("DriveCSV", "dest_x_pos", targetPose.X().value());
-    Feedback::sendDouble("DriveCSV", "dest_y_pos", targetPose.Y().value());
+    Feedback::sendDouble("DriveCSV", "t_x_pos", targetPose.X().value());
+    Feedback::sendDouble("DriveCSV", "t_y_pos", targetPose.Y().value());
     Feedback::sendDouble("DriveCSV", "x_vel", chassisSpeeds.vx.value());
     Feedback::sendDouble("DriveCSV", "y_vel", chassisSpeeds.vy.value());
     Feedback::sendDouble("DriveCSV", "ang_vel", chassisSpeeds.omega.value());
     Feedback::sendDouble("DriveCSV", "ang", pose.Rotation().Radians().value());
-    Feedback::sendDouble("DriveCSV", "dest_ang", targetPose.Rotation().Radians().value());
+    Feedback::sendDouble("DriveCSV", "t_ang", targetPose.Rotation().Radians().value());
 }

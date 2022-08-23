@@ -219,14 +219,14 @@ units::meters_per_second_t SwerveModule::getDriveVelocity() {
 void SwerveModule::sendFeedback(std::size_t moduleIndex) {
     std::string i = std::to_string(moduleIndex);
     
-    Feedback::sendDouble("Drive Module", "module " + i + " relative rotation", getRelativeRotation());
-    Feedback::sendDouble("Drive Module", "module " + i + " raw rotation (deg)", units::degree_t(getRawRotation()).value());
-    Feedback::sendDouble("Drive Module", "module " + i + " rotation (deg)", getAbsoluteRotation().Degrees().value());
-    Feedback::sendDouble("Drive Module", "module " + i + " encoder offset (deg)", units::degree_t(canCoderOffset).value());
-    Feedback::sendDouble("Drive Module", "module " + i + " target rotation (deg)", units::degree_t(targetRotation).value());
-    Feedback::sendDouble("Drive Module", "module " + i + " drive encoder", getRawDriveEncoder());
-    Feedback::sendDouble("Drive Module", "module " + i + " velocity (m/s)", getDriveVelocity().value());
-    Feedback::sendDouble("Drive Module", "module " + i + " turning motor temp (F)", turningMotor.getTemperature().value());
-    Feedback::sendDouble("Drive Module", "module " + i + " drive motor temp (F)", driveMotor.getTemperature().value());
+    Feedback::sendDouble("Drive Module " + i, "relative rotation", getRelativeRotation());
+    Feedback::sendDouble("Drive Module " + i, "raw rotation (deg)", units::degree_t(getRawRotation()).value());
+    Feedback::sendDouble("Drive Module " + i, "rotation (deg)", getAbsoluteRotation().Degrees().value());
+    Feedback::sendDouble("Drive Module " + i, "encoder offset (deg)", units::degree_t(canCoderOffset).value());
+    Feedback::sendDouble("Drive Module " + i, "target rotation (deg)", units::degree_t(targetRotation).value());
+    Feedback::sendDouble("Drive Module " + i, "drive encoder", getRawDriveEncoder());
+    Feedback::sendDouble("Drive Module " + i, "velocity (m/s)", getDriveVelocity().value());
+    Feedback::sendDouble("Drive Module " + i, "turning motor temp (F)", turningMotor.getTemperature().value());
+    Feedback::sendDouble("Drive Module " + i, "drive motor temp (F)", driveMotor.getTemperature().value());
     // hi jeff
 }

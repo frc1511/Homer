@@ -4,11 +4,11 @@
 #include <string>
 #include <stdarg.h>
 
-void Feedback::sendString(const char* subsystem, std::string_view name, std::string_view str) {
+void Feedback::sendString(std::string subsystem, const char* name, std::string_view str) {
     sendString(subsystem, name, str.data());
 }
 
-void Feedback::sendString(const char* subsystem, std::string_view name, const char* format, ...) {
+void Feedback::sendString(std::string subsystem, const char* name, const char* format, ...) {
     std::string keyName = subsystem;
     keyName += "_";
     keyName += name;
@@ -22,7 +22,7 @@ void Feedback::sendString(const char* subsystem, std::string_view name, const ch
     frc::SmartDashboard::PutString(keyName.c_str(), buffer);
 }
 
-void Feedback::sendDouble(const char* subsystem, std::string_view name, double value) {
+void Feedback::sendDouble(std::string subsystem, const char* name, double value) {
     std::string keyName = subsystem;
     keyName += "_";
     keyName += name;
@@ -30,7 +30,7 @@ void Feedback::sendDouble(const char* subsystem, std::string_view name, double v
     frc::SmartDashboard::PutNumber(keyName, value);
 }
 
-double Feedback::getDouble(const char* subsystem, std::string_view name, double fallback) {
+double Feedback::getDouble(std::string subsystem, const char* name, double fallback) {
     std::string keyName = subsystem;
     keyName += "_";
     keyName += name;
@@ -38,11 +38,11 @@ double Feedback::getDouble(const char* subsystem, std::string_view name, double 
     return frc::SmartDashboard::GetNumber(keyName, fallback);
 }
 
-void Feedback::sendBoolean(const char* subsystem, std::string_view name, bool value) {
+void Feedback::sendBoolean(std::string subsystem, const char* name, bool value) {
     sendString(subsystem, name, value ? "true" : "false");
 }
 
-void Feedback::sendEditableDouble(const char* subsystem, std::string_view name, double value) {
+void Feedback::sendEditableDouble(std::string subsystem, const char* name, double value) {
     std::string keyName = subsystem;
     keyName += "_";
     keyName += name;
@@ -50,7 +50,7 @@ void Feedback::sendEditableDouble(const char* subsystem, std::string_view name, 
     frc::SmartDashboard::PutNumber(keyName.c_str(), value);
 }
 
-double Feedback::getEditableDouble(const char* subsystem, std::string_view name, double fallback) {
+double Feedback::getEditableDouble(std::string subsystem, const char* name, double fallback) {
     std::string keyName = subsystem;
     keyName += "_";
     keyName += name;
