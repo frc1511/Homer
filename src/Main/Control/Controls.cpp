@@ -15,20 +15,43 @@ void Controls::process() {
     doSwitchPanel();
 }
 
+void Controls::processInDisabled() {
+    doSwitchPanel();
+
+    using DriveButton = HardwareManager::DriveGameController::Button;
+
+    bool toggleCamera = driveController.getButtonPressed(DriveButton::SQUARE);
+    bool zeroRotation = driveController.getButtonPressed(DriveButton::OPTIONS);
+    bool calIMU = driveController.getButtonPressed(DriveButton::SHARE);
+
+    if (toggleCamera) {
+        whichCamera = !whichCamera;
+    }
+
+    if (zeroRotation) {
+        drive->zeroRotation();
+    }
+
+    if (calIMU) {
+        drive->calibrateIMU();
+        drive->zeroRotation();
+    }
+}
+
 void Controls::doDrive() {
     using DriveButton = HardwareManager::DriveGameController::Button;
     using DriveAxis = HardwareManager::DriveGameController::Axis;
 
     bool brickDrive = driveController.getButton(DriveButton::CROSS);
     bool viceGrip = driveController.getButton(DriveButton::CIRCLE);
-    bool toggleCamera = driveController.getButton(DriveButton::SQUARE);
+    bool toggleCamera = driveController.getButtonPressed(DriveButton::SQUARE);
 
     double xVel = driveController.getAxis(DriveAxis::LEFT_X);
     double yVel = driveController.getAxis(DriveAxis::LEFT_Y);
     double angVel = driveController.getAxis(DriveAxis::RIGHT_X);
 
     bool zeroRotation = driveController.getButtonPressed(DriveButton::OPTIONS);
-    bool calGyro = driveController.getButtonPressed(DriveButton::SHARE);
+    bool calIMU = driveController.getButtonPressed(DriveButton::SHARE);
 
     bool wasBrickDrive = driveCtrlFlags & Drive::ControlFlag::BRICK;
     
@@ -50,7 +73,6 @@ void Controls::doDrive() {
         driveCtrlFlags |= Drive::ControlFlag::RECORDING;
     }
 
-    static bool whichCamera = false;
     if (toggleCamera) {
         whichCamera = !whichCamera;
     }
@@ -59,7 +81,7 @@ void Controls::doDrive() {
         drive->zeroRotation();
     }
 
-    if (calGyro) {
+    if (calIMU) {
         drive->calibrateIMU();
         drive->zeroRotation();
     }

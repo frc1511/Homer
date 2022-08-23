@@ -12,6 +12,7 @@ public:
     ~Controls();
     
     void process() override;
+    void processInDisabled();
     void sendFeedback() override;
 
     bool getShouldPersistConfig();
@@ -24,6 +25,8 @@ private:
     void doDrive();
     void doAux();
     void doSwitchPanel();
+
+    bool whichCamera = false;
 
     bool driveRobotCentric = false;
     unsigned driveCtrlFlags = Drive::ControlFlag::NONE;

@@ -36,7 +36,9 @@ void Homer::DisabledInit() {
     reset(Mechanism::MatchMode::DISABLED);
 }
 
-void Homer::DisabledPeriodic() { }
+void Homer::DisabledPeriodic() {
+    controls.processInDisabled();
+}
 
 void Homer::TestInit() {
     if (controls.getShouldPersistConfig()) {
