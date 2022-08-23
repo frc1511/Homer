@@ -45,6 +45,9 @@
 // The maximum angular acceleration during auto.
 #define DRIVE_AUTO_MAX_ANGULAR_ACCELERATION (3.14_rad_per_s_sq)
 
+// The path where the recorded trajectory is stored.
+#define RECORDED_TRAJECTORY_FILE_NAME "/home/lvuser/recorded_trajectory.csv"
+
 class Drive : public Mechanism {
 public:
     Drive();
@@ -120,6 +123,16 @@ public:
      * Returns the raw rotation of the robot as recorded by the IMU.
      */
     frc::Rotation2d getRotation();
+
+    /**
+     * Reloads the recorded trajectory.
+     */
+    void reloadRecordedTrajectory();
+
+    /**
+     * Returns the recorded trajectory.
+     */
+    inline const Trajectory& getRecordedTrajectory() const { return recordedTrajectory; }
 
 private:
     /**
@@ -244,6 +257,9 @@ private:
     frc::Timer teleopTimer;
 
     units::second_t lastTeleopTime;
+
+    // The recorded trajectory.
+    Trajectory recordedTrajectory { RECORDED_TRAJECTORY_FILE_NAME };
 
     // The trajectory that is currently being run.
     const Trajectory* trajectory = nullptr;

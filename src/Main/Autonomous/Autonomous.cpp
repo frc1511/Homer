@@ -28,19 +28,22 @@ void Autonomous::process() {
             doNothing();
             break;
         case AutoMode::LINE:
-            line();
+            runTrajectory(lineTrajectory);
             break;
         case AutoMode::GREAT_HALLWAY_ADVENTURE:
-            greatHallwayAdventure();
+            runTrajectory(greatHallwayAdventureTrajectory);
             break;
         case AutoMode::DEMO_GRATEFUL_RED:
-            gratefulRed();
+            runTrajectory(gratefulRedTrajectory);
             break;
-        case AutoMode::GREAT_G3_ADVENTURE_AWAY:
-            greatG3AdventureAway();
+        case AutoMode::GREAT_G3_ADVENTURE_TO_HALLWAY:
+            runTrajectory(greatG3AdventureAwayTrajectory);
             break;
-        case AutoMode::GREAT_G3_ADVENTURE_BACK:
-            greatG3AdventureBack();
+        case AutoMode::GREAT_G3_ADVENTURE_TO_SHOP:
+            runTrajectory(greatG3AdventureBackTrajectory);
+            break;
+        case AutoMode::RECORDED:
+            runTrajectory(drive->getRecordedTrajectory());
             break;
     }
 }
@@ -56,49 +59,9 @@ void Autonomous::doNothing() {
     // Very bad function. - jeff ups
 }
 
-void Autonomous::line() {
+void Autonomous::runTrajectory(const Trajectory& trajectory) {
     if (step == 0) {
-        drive->runTrajectory(lineTrajectory, actions);
-        ++step;
-    }
-    else if (step == 1 && drive->isFinished()) {
-        ++step;
-    }
-}
-
-void Autonomous::greatHallwayAdventure() {
-    if (step == 0) {
-        drive->runTrajectory(greatHallwayAdventureTrajectory, actions);
-        ++step;
-    }
-    else if (step == 1 && drive->isFinished()) {
-        ++step;
-    }
-}
-
-void Autonomous::gratefulRed() {
-    if (step == 0) {
-        drive->runTrajectory(gratefulRedTrajectory, actions);
-        ++step;
-    }
-    else if (step == 1 && drive->isFinished()) {
-        ++step;
-    }
-}
-
-void Autonomous::greatG3AdventureAway() {
-    if (step == 0) {
-        drive->runTrajectory(greatG3AdventureAwayTrajectory, actions);
-        ++step;
-    }
-    else if (step == 1 && drive->isFinished()) {
-        ++step;
-    }
-}
-
-void Autonomous::greatG3AdventureBack() {
-    if (step == 0) {
-        drive->runTrajectory(greatG3AdventureBackTrajectory, actions);
+        drive->runTrajectory(trajectory, actions);
         ++step;
     }
     else if (step == 1 && drive->isFinished()) {
@@ -124,12 +87,13 @@ void Autonomous::sendFeedback() {
         Feedback::sendString("thunderdashboard_auto", mode_str, description);
     };
 
-    sendAutoMode(AutoMode::DO_NOTHING, "Do Nothing?!? Nooooooo!!!!");
-    sendAutoMode(AutoMode::LINE, "Drive forward 6m and drive back while turning");
-    sendAutoMode(AutoMode::GREAT_HALLWAY_ADVENTURE, "Drive Forward or Something");
-    sendAutoMode(AutoMode::DEMO_GRATEFUL_RED, "Grateful Red Demo Path");
-    sendAutoMode(AutoMode::GREAT_G3_ADVENTURE_AWAY, "Leave G3");
-    sendAutoMode(AutoMode::GREAT_G3_ADVENTURE_BACK, "Enter G3");
+    sendAutoMode(AutoMode::DO_NOTHING, "Do Nothing");
+    sendAutoMode(AutoMode::LINE, "Line");
+    sendAutoMode(AutoMode::GREAT_HALLWAY_ADVENTURE, "Great Hallway Adventure");
+    sendAutoMode(AutoMode::DEMO_GRATEFUL_RED, "Grateful Red Demo");
+    sendAutoMode(AutoMode::GREAT_G3_ADVENTURE_TO_HALLWAY, "Leave G3");
+    sendAutoMode(AutoMode::GREAT_G3_ADVENTURE_TO_SHOP, "Enter G3");
+    sendAutoMode(AutoMode::RECORDED, "Recorded Trajectory");
 
     Feedback::sendString("thunderdashboard", "auto_list", buffer);
 }

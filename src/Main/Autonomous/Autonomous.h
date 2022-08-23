@@ -27,16 +27,13 @@ private:
         LINE = 1, // Drive straight 6 meters and drive back.
         GREAT_HALLWAY_ADVENTURE = 2, // Drive around the hallway.
         DEMO_GRATEFUL_RED = 3,
-        GREAT_G3_ADVENTURE_AWAY = 4,
-        GREAT_G3_ADVENTURE_BACK = 5,
+        GREAT_G3_ADVENTURE_TO_HALLWAY = 4,
+        GREAT_G3_ADVENTURE_TO_SHOP = 5,
+        RECORDED = 6,
     };
 
     void doNothing();
-    void line();
-    void greatHallwayAdventure();
-    void gratefulRed();
-    void greatG3AdventureAway();
-    void greatG3AdventureBack();
+    void runTrajectory(const Trajectory& trajectory);
 
     AutoMode currentMode = AutoMode::DO_NOTHING;
 
@@ -47,7 +44,7 @@ private:
 
     Drive* drive;
 
-    Trajectory lineTrajectory                  { "/home/lvuser/recorded_trajectory.csv" }; // */DEPLOY_DIR "line/line.csv" };
+    Trajectory lineTrajectory                  { DEPLOY_DIR "line/line.csv" };
     Trajectory greatHallwayAdventureTrajectory { DEPLOY_DIR "great_hallway_adventure/great_hallway_adventure.csv" };
     Trajectory gratefulRedTrajectory           { DEPLOY_DIR "demo/GratefulRed.csv" };
     Trajectory greatG3AdventureAwayTrajectory  { DEPLOY_DIR "great_g3_adventure/great_g3_adventure_away.csv" };

@@ -1,4 +1,5 @@
 #include <Drive/Drive.h>
+#include <Autonomous/Autonomous.h>
 
 // The file which magnetic encoder offsets are stored on the RoboRIO.
 #define ENCODER_OFFSETS_FILE_NAME "/home/lvuser/magnetic_encoder_offsets.txt"
@@ -73,7 +74,10 @@ void Drive::resetToMode(MatchMode mode) {
              * Export the recorded trajectory to a CSV file on the RoboRIO so
              * it can be examined and/or played back later.
              */
-            trajectoryRecorder.writeToCSV("/home/lvuser/recorded_trajectory.csv");
+            trajectoryRecorder.writeToCSV(RECORDED_TRAJECTORY_FILE_NAME);
+
+            // Reload the recorded trajectory from the file.
+            reloadRecordedTrajectory();
         }
     }
     else {
@@ -226,6 +230,10 @@ frc::Rotation2d Drive::getRotation() {
     units::degree_t imuAngle = imu.getAngle();
 
     return frc::Rotation2d(imuAngle);
+}
+
+void Drive::reloadRecordedTrajectory() {
+    recordedTrajectory = Trajectory(RECORDED_TRAJECTORY_FILE_NAME);
 }
 
 void Drive::updateOdometry() {
