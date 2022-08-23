@@ -47,7 +47,7 @@ private:
 
     Drive* drive;
 
-    Trajectory lineTrajectory                  { DEPLOY_DIR "line/line.csv" };
+    Trajectory lineTrajectory                  { "/home/lvuser/recorded_trajectory.csv" }; // */DEPLOY_DIR "line/line.csv" };
     Trajectory greatHallwayAdventureTrajectory { DEPLOY_DIR "great_hallway_adventure/great_hallway_adventure.csv" };
     Trajectory gratefulRedTrajectory           { DEPLOY_DIR "demo/GratefulRed.csv" };
     Trajectory greatG3AdventureAwayTrajectory  { DEPLOY_DIR "great_g3_adventure/great_g3_adventure_away.csv" };

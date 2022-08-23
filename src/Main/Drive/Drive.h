@@ -143,6 +143,11 @@ private:
     void execTrajectory();
 
     /**
+     * Records a state.
+     */
+    void record_state();
+
+    /**
      * Puts the drivetrain into brick mode (all modules turned towards the center).
      */
     void makeBrick();
@@ -237,6 +242,8 @@ private:
     TrajectoryRecorder trajectoryRecorder;
 
     frc::Timer teleopTimer;
+
+    units::second_t lastTeleopTime;
 
     // The trajectory that is currently being run.
     const Trajectory* trajectory = nullptr;

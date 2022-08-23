@@ -4,7 +4,7 @@
 #define ENCODER_OFFSETS_FILE_NAME "/home/lvuser/magnetic_encoder_offsets.txt"
 
 // The maximum velocity during manual control.
-#define DRIVE_MANUAL_MAX_VELOCITY 2_mps
+#define DRIVE_MANUAL_MAX_VELOCITY 1_mps
 
 // The maximum angular velocity during manual control.
 #define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 180_deg_per_s
@@ -48,6 +48,7 @@ void Drive::doPersistentConfiguration() {
 
 void Drive::resetToMode(MatchMode mode) {
     driveMode = DriveMode::STOPPED;
+    bool wasRecording = manualData.flags & ControlFlag::RECORDING;
     manualData = {};
 
     // This seems to be necessary. Don't ask me why.
@@ -61,6 +62,10 @@ void Drive::resetToMode(MatchMode mode) {
 
         teleopTimer.Stop();
         trajectoryTimer.Stop();
+
+        if (wasRecording) {
+            trajectoryRecorder.writeToCSV("/home/lvuser/recorded_trajectory.csv");
+        }
     }
     else {
         // Brake all motors when enabled to help counteract pushing.
@@ -77,6 +82,7 @@ void Drive::resetToMode(MatchMode mode) {
 
         // Reset the teleop timer.
         teleopTimer.Reset();
+        lastTeleopTime = 0_s;
 
         if (mode == MatchMode::TELEOP) {
             teleopTimer.Start();
@@ -97,6 +103,8 @@ void Drive::resetToMode(MatchMode mode) {
             // Write the header of the CSV file.
             trajectoryMotionFile << "time,x_pos,y_pos,dest_x_pos,dest_y_pos,vel_x,vel_y,vel_ang,ang,dest_ang\n";
         }
+
+        resetOdometry();
     }
 }
 
@@ -169,7 +177,9 @@ bool Drive::isFinished() const {
 }
 
 void Drive::zeroRotation() {
-    resetOdometry(getPose());
+    std::cout << "zeroed rotation\n";
+    frc::Pose2d currPose(getPose());
+    resetOdometry(frc::Pose2d(currPose.X(), currPose.Y(), 0_deg));
 }
 
 void Drive::calibrateIMU() {
@@ -222,6 +232,10 @@ void Drive::execStopped() {
     // Put the drivetrain into brick mode if the flag is set.
     if (manualData.flags & ControlFlag::BRICK) {
         makeBrick();
+    }
+
+    if (manualData.flags & ControlFlag::RECORDING) {
+        record_state();
     }
 }
 
@@ -278,12 +292,7 @@ void Drive::execManual() {
     setModuleStates(velocities);
 
     if (manualData.flags & ControlFlag::RECORDING) {
-        static units::second_t prevTime = 0_s;
-        units::second_t currTime(teleopTimer.Get());
-
-        trajectoryRecorder.addState(currTime - prevTime, currPose);
-
-        prevTime = currTime;
+        record_state();
     }
 }
 
@@ -396,6 +405,17 @@ void Drive::execTrajectory() {
 
     // Make the robot go vroom :D
     setModuleStates(velocities);
+}
+
+void Drive::record_state() {
+    units::second_t currTime(teleopTimer.Get());
+    frc::Pose2d currPose(getPose());
+
+    std::cout << "prev " << lastTeleopTime.value() << " curr " << currTime.value() << " diff " << (currTime - lastTeleopTime).value() << '\n';
+
+    trajectoryRecorder.addState(currTime - lastTeleopTime, frc::Pose2d(currPose.X(), currPose.Y(), currPose.Rotation().Degrees() + 90_deg));
+
+    lastTeleopTime = currTime;
 }
 
 void Drive::makeBrick() {
@@ -534,6 +554,7 @@ void Drive::sendFeedback() {
     Feedback::sendBoolean("Drive", "field centric", manualData.flags & ControlFlag::FIELD_CENTRIC);
     Feedback::sendBoolean("Drive", "vice grip", manualData.flags & ControlFlag::VICE_GRIP);
     Feedback::sendBoolean("Drive", "brick", manualData.flags & ControlFlag::BRICK);
+    Feedback::sendBoolean("Drive", "recording", manualData.flags & ControlFlag::RECORDING);
 
     // Feedback for the motion profile.
     Feedback::sendDouble("DriveCSV", "x_pos", pose.X().value());
