@@ -44,10 +44,20 @@
 #define DRIVE_AUTO_MAX_ANGULAR_VELOCITY 3.14_rad_per_s
 
 // The maximum angular acceleration during auto.
-#define DRIVE_AUTO_MAX_ANGULAR_ACCELERATION (3.14_rad_per_s_sq)
+#define DRIVE_AUTO_MAX_ANGULAR_ACCELERATION 3.14_rad_per_s_sq
 
 // The path where the recorded trajectory is stored.
 #define RECORDED_TRAJECTORY_FILE_NAME "/home/lvuser/recorded_trajectory.csv"
+
+// Drivetrain X and Y PID values.
+#define DRIVE_XY_P 0.4
+#define DRIVE_XY_I 0.0
+#define DRIVE_XY_D 0.02
+
+// Drivetrain Theta PID values.
+#define DRIVE_THETA_P 2.5
+#define DRIVE_THETA_I 0.0
+#define DRIVE_THETA_D 0.0
 
 class Drive : public Mechanism {
 public:
@@ -280,12 +290,12 @@ private:
     frc::Timer trajectoryTimer;
 
     // PID Controller for X and Y axis drivetrain movement.
-    frc::PIDController xPIDController { 0.4, 0.0, 0.02 },
-                       yPIDController { 0.4, 0.0, 0.02 };
+    frc::PIDController xPIDController { DRIVE_XY_P, DRIVE_XY_I, DRIVE_XY_D },
+                       yPIDController { DRIVE_XY_P, DRIVE_XY_I, DRIVE_XY_D };
 
     // PID Controller for angular drivetrain movement.
     frc::ProfiledPIDController<units::radians> thetaPIDController {
-        2.5, 0.0, 0.0,
+        DRIVE_THETA_P, DRIVE_THETA_I, DRIVE_THETA_D,
         frc::TrapezoidProfile<units::radians>::Constraints(DRIVE_AUTO_MAX_ANGULAR_VELOCITY, DRIVE_AUTO_MAX_ANGULAR_ACCELERATION)
     };
 
