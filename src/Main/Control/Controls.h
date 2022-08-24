@@ -5,10 +5,11 @@
 #include <Drive/Drive.h>
 #include <Hardware/IOMap.h>
 #include <Illumination/BlinkyBlinky.h>
+#include <Vision/Limelight.h>
 
 class Controls : public Mechanism {
 public:
-    Controls(Drive* drive, BlinkyBlinky* blinkyBlinky = nullptr);
+    Controls(Drive* drive, Limelight* limelight, BlinkyBlinky* blinkyBlinky = nullptr);
     ~Controls();
     
     void process() override;
@@ -34,5 +35,6 @@ private:
     bool driveRecording = false;
 
     Drive* drive;
+    Limelight* limelight;
     BlinkyBlinky* blinkyBlinky;
 };

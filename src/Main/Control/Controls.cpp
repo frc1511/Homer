@@ -4,8 +4,8 @@
 
 #define AXIS_DEADZONE 0.1
 
-Controls::Controls(Drive* drive, BlinkyBlinky* blinkyBlinky)
-: drive(drive), blinkyBlinky(blinkyBlinky) { }
+Controls::Controls(Drive* drive, Limelight* limelight, BlinkyBlinky* blinkyBlinky)
+: drive(drive), limelight(limelight), blinkyBlinky(blinkyBlinky) { }
 
 Controls::~Controls() { }
 
@@ -141,6 +141,16 @@ void Controls::doSwitchPanel() {
     settings.isCraterMode = switchPanel.getButton(1);
     driveRobotCentric = switchPanel.getButton(2);
     driveRecording = switchPanel.getButton(3);
+
+    // Only turn on limelight when broken switch is on or the drivetrain is vice gripping.
+    if (switchPanel.getButton(5) || driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) {
+        limelight->setLEDMode(Limelight::LEDMode::ON);
+        limelight->setCameraMode(Limelight::CameraMode::VISION_PROCESS);
+    }
+    else {
+        limelight->setLEDMode(Limelight::LEDMode::OFF);
+        limelight->setCameraMode(Limelight::CameraMode::DRIVER_CAMERA);
+    }
 
     if (blinkyBlinky) {
         if (switchPanel.getButton(4)) {

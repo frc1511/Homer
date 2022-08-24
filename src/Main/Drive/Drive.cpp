@@ -1,5 +1,4 @@
 #include <Drive/Drive.h>
-#include <Autonomous/Autonomous.h>
 
 // The file which magnetic encoder offsets are stored on the RoboRIO.
 #define ENCODER_OFFSETS_FILE_NAME "/home/lvuser/magnetic_encoder_offsets.txt"
@@ -10,8 +9,8 @@
 // The maximum angular velocity during manual control.
 #define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 180_deg_per_s
 
-Drive::Drive()
-: driveController(
+Drive::Drive(Limelight* limelight)
+: limelight(limelight), driveController(
     [&]() -> frc::HolonomicDriveController {
         // Set the angular PID controller range from -180 to 180 degrees.
         thetaPIDController.EnableContinuousInput(units::radian_t(-180_deg), units::radian_t(180_deg));
@@ -285,9 +284,7 @@ void Drive::execManual() {
      * manual angular velocity control.
      */
     if (manualData.flags & ControlFlag::VICE_GRIP) {
-        // No limelight on Homer right now D:
-        // units::degree_t angleToTurn = -limelight->getAngleHorizontal();
-        units::degree_t angleToTurn = 0_deg;
+        units::degree_t angleToTurn = -limelight->getAngleHorizontal();
         
         units::radian_t currentRotation(currPose.Rotation().Radians());
 

@@ -3,6 +3,7 @@
 #include <Basic/Mechanism.h>
 #include <Hardware/HardwareManager.h>
 #include <Drive/SwerveModule.h>
+#include <Vision/Limelight.h>
 #include <Trajectory/Trajectory.h>
 #include <Trajectory/TrajectoryRecorder.h>
 #include <Basic/Feedback.h>
@@ -50,7 +51,7 @@
 
 class Drive : public Mechanism {
 public:
-    Drive();
+    Drive(Limelight* limelight);
     ~Drive();
 
     void process() override;
@@ -195,6 +196,9 @@ private:
      * Sets the velocities of the drivetrain.
      */
     void setModuleStates(frc::ChassisSpeeds speeds);
+
+    // Vision camera.
+    Limelight* limelight;
 
     // The IMU that keeps track of the robot's rotation.
     HardwareManager::DriveIMU imu;
