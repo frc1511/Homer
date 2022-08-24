@@ -36,8 +36,10 @@ static const ColorInterpolation kDisabledInterp(
     LED_ENABLED_NUM_TOTAL
 );
 
+#include <iostream>
+
 BlinkyBlinky::BlinkyBlinky() {
-    strip.SetLength(LED_ENABLED_NUM_TOTAL);
+    strip.SetLength(LED_NUM_TOTAL);
     strip.SetData(stripBuffer);
     strip.Start();
 }
@@ -88,7 +90,7 @@ void BlinkyBlinky::process() {
 
     rgbOffset -=- 3;
     rgbOffset %= 255;
-    hsvOffset -=- 3;
+    hsvOffset -=- 1;
     hsvOffset %= 180;
 }
 

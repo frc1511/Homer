@@ -12,7 +12,10 @@ void Mechanism::sendFeedback() { }
 void Mechanism::process() { }
 
 Mechanism::MatchMode Mechanism::getCurrentMode() {
-    if (frc::DriverStation::IsAutonomous()) {
+    if (frc::DriverStation::IsDisabled()) {
+        return MatchMode::DISABLED;
+    }
+    else if (frc::DriverStation::IsAutonomous()) {
         return MatchMode::AUTO;
     } 
     else if (frc::DriverStation::IsTeleop()) {

@@ -4,10 +4,10 @@
 #define ENCODER_OFFSETS_FILE_NAME "/home/lvuser/magnetic_encoder_offsets.txt"
 
 // The maximum velocity during manual control.
-#define DRIVE_MANUAL_MAX_VELOCITY 1_mps
+#define DRIVE_MANUAL_MAX_VELOCITY 1.5_mps
 
 // The maximum angular velocity during manual control.
-#define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 180_deg_per_s
+#define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 270_deg_per_s
 
 Drive::Drive(Limelight* limelight)
 : limelight(limelight), driveController(
@@ -190,10 +190,7 @@ bool Drive::isFinished() const {
 }
 
 void Drive::zeroRotation() {
-    frc::Pose2d currPose(getPose());
-
-    // Reset the known rotation of the robot to zero degrees fahrenheit.
-    resetOdometry(frc::Pose2d(currPose.X(), currPose.Y(), 0_deg));
+    resetOdometry();
 }
 
 void Drive::calibrateIMU() {

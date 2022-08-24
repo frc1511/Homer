@@ -40,7 +40,7 @@ public:
 private:
     frc::AddressableLED strip { PWM_BLINKY_BLINKY };
 
-    std::array<frc::AddressableLED::LEDData, LED_ENABLED_NUM_TOTAL> stripBuffer;
+    std::array<frc::AddressableLED::LEDData, LED_NUM_TOTAL> stripBuffer;
 
     enum class Strip : std::size_t {
         FRONT = 0,
