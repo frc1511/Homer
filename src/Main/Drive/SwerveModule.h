@@ -53,7 +53,7 @@ public:
     /**
      * Sets the idle mode of the drive motor controller.
      */
-    void setIdleMode(ThunderMotorController::IdleMode idleMode);
+    void setIdleMode(ThunderCANMotorController::IdleMode idleMode);
 
 private:
     /**

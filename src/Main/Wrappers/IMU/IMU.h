@@ -7,9 +7,10 @@
 
 class ThunderIMU {
 public:
+    ThunderIMU() = default;
     virtual ~ThunderIMU() = default;
 
-    virtual void calibrate() = 0;
+    virtual void calibrate() { }
 
     enum class CalibrationTime {
         _32ms = 0, _64ms = 1, _128ms = 2, _256ms = 3,
@@ -17,25 +18,17 @@ public:
         _8s = 8, _16s = 9, _32s = 10, _64s = 11
     };
 
-    virtual int configCalTime(CalibrationTime time) = 0;
-
-    virtual void reset() = 0;
-
-    virtual units::degree_t getAngle() const = 0;
-
-    virtual units::degrees_per_second_t getRate() const = 0;
-
-    virtual units::meters_per_second_squared_t getAccelX() const = 0;
-
-    virtual units::meters_per_second_squared_t getAccelY() const = 0;
-
-    virtual units::meters_per_second_squared_t getAccelZ() const = 0;
+    virtual int configCalTime(CalibrationTime time)              { return 0; }
+    virtual void reset()                                         { }
+    virtual units::degree_t getAngle() const                     { return 0_deg; }
+    virtual units::degrees_per_second_t getRate() const          { return 0_deg_per_s; }
+    virtual units::meters_per_second_squared_t getAccelX() const { return 0_mps_sq; }
+    virtual units::meters_per_second_squared_t getAccelY() const { return 0_mps_sq; }
+    virtual units::meters_per_second_squared_t getAccelZ() const { return 0_mps_sq; }
 
     enum class Axis { X, Y, Z };
 
-    virtual Axis getYawAxis() const = 0;
-
-    virtual int setYawAxis(Axis yawAxis) = 0;
-
-    virtual int getPort() const = 0;
+    virtual Axis getYawAxis() const      { return Axis::Z; }
+    virtual int setYawAxis(Axis yawAxis) { return 0; }
+    virtual int getPort() const          { return -1; }
 };

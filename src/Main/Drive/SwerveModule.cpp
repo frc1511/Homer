@@ -55,7 +55,7 @@ void SwerveModule::configureMotors() {
     driveMotor.configFactoryDefault();
 
     // Set the idle mode to coast.
-    driveMotor.setIdleMode(ThunderMotorController::IdleMode::COAST);
+    driveMotor.setIdleMode(ThunderCANMotorController::IdleMode::COAST);
 
     // Amperage limiting.
     driveMotor.configSmartCurrentLimit(DRIVE_MAX_AMPERAGE);
@@ -78,7 +78,7 @@ void SwerveModule::configureMotors() {
     turningMotor.configFactoryDefault();
 
     // Coast when idle so that people can turn the module.
-    turningMotor.setIdleMode(ThunderMotorController::IdleMode::COAST);
+    turningMotor.setIdleMode(ThunderCANMotorController::IdleMode::COAST);
 
     // Amperage limiting.
     turningMotor.configSmartCurrentLimit(TURN_MAX_AMPERAGE);
@@ -103,8 +103,8 @@ void SwerveModule::doPersistentConfiguration() {
 }
 
 void SwerveModule::stop() {
-    turningMotor.set(ThunderMotorController::ControlMode::PERCENT_OUTPUT, 0.0);
-    driveMotor.set(ThunderMotorController::ControlMode::PERCENT_OUTPUT, 0.0);
+    turningMotor.set(ThunderCANMotorController::ControlMode::PERCENT_OUTPUT, 0.0);
+    driveMotor.set(ThunderCANMotorController::ControlMode::PERCENT_OUTPUT, 0.0);
     driveMotor.setEncoderPosition(0.0);
 }
 
@@ -172,14 +172,14 @@ void SwerveModule::setTurningMotor(units::radian_t angle) {
     output += getRelativeRotation();
 
     // Set the PID reference to the desired position.
-    turningMotor.set(ThunderMotorController::ControlMode::POSITION, output);
+    turningMotor.set(ThunderCANMotorController::ControlMode::POSITION, output);
 }
 
 void SwerveModule::setOffset(units::radian_t offset) {
     canCoderOffset = offset;
 }
 
-void SwerveModule::setIdleMode(ThunderMotorController::IdleMode idleMode) {
+void SwerveModule::setIdleMode(ThunderCANMotorController::IdleMode idleMode) {
     driveMotor.setIdleMode(idleMode);
 }
 
@@ -188,7 +188,7 @@ void SwerveModule::setDriveMotor(units::meters_per_second_t velocity) {
     double rpm = velocity.value() * 60 * DRIVE_METER_TO_ENCODER_FACTOR;
 
     // Set the PID reference to the desired RPM.
-    driveMotor.set(ThunderMotorController::ControlMode::VELOCITY, rpm);
+    driveMotor.set(ThunderCANMotorController::ControlMode::VELOCITY, rpm);
 }
 
 double SwerveModule::getRelativeRotation() {

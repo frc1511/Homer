@@ -1,12 +1,12 @@
 #include <Wrappers/MotorController/CTRE/CANTalonFX.h>
 
 ThunderCANTalonFX::ThunderCANTalonFX(int canID)
-: talon(canID) { }
+: ThunderCANMotorController(canID), talon(canID) { }
 
 ThunderCANTalonFX::~ThunderCANTalonFX() = default;
 
-ThunderMotorController::Vendor ThunderCANTalonFX::getVendor() const {
-    return ThunderMotorController::Vendor::CTRE;
+ThunderCANMotorController::Vendor ThunderCANTalonFX::getVendor() const {
+    return ThunderCANMotorController::Vendor::CTRE;
 }
 
 int ThunderCANTalonFX::set(ControlMode mode, double value) {
@@ -34,7 +34,7 @@ double ThunderCANTalonFX::getPercentOutput() const {
     return talon.GetMotorOutputPercent();
 }
 
-double ThunderCANTalonFX::getEncoderPosition() {
+double ThunderCANTalonFX::getEncoderPosition() const {
     return talon.GetSelectedSensorPosition(0);
 }
 
@@ -164,8 +164,8 @@ int ThunderCANTalonFX::configOutputRange(double min, double max, int slotID, uni
     return res;
 }
 
-void ThunderCANTalonFX::follow(ThunderMotorController* master) {
-    assert(master && master->getVendor() == ThunderMotorController::Vendor::CTRE);
+void ThunderCANTalonFX::follow(ThunderCANMotorController* master) {
+    assert(master && master->getVendor() == ThunderCANMotorController::Vendor::CTRE);
     
     auto talonMaster = reinterpret_cast<ctre::phoenix::motorcontrol::can::TalonFX*>(master->getRawMotorController());
     talon.Follow(*talonMaster);

@@ -200,7 +200,7 @@ private:
     /**
      * Sets the idle mode of the drive motors.
      */
-    void setIdleMode(ThunderMotorController::IdleMode mode);
+    void setIdleMode(ThunderCANMotorController::IdleMode mode);
 
     /**
      * Sets the velocities of the drivetrain.

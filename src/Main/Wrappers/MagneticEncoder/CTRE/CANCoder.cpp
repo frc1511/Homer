@@ -1,7 +1,7 @@
 #include <Wrappers/MagneticEncoder/CTRE/CANCoder.h>
 
 ThunderCANCoder::ThunderCANCoder(int canID)
-: canCoder(canID) { }
+: ThunderCANMagneticEncoder(canID), canCoder(canID) { }
 
 ThunderCANCoder::~ThunderCANCoder() = default;
 

@@ -62,7 +62,7 @@ void Drive::resetToMode(MatchMode mode) {
          * Coast all motors in disabled (good for transportation, however can
          * lead to some runaway robots).
          */
-        setIdleMode(ThunderMotorController::IdleMode::COAST);
+        setIdleMode(ThunderCANMotorController::IdleMode::COAST);
 
         teleopTimer.Stop();
         trajectoryTimer.Stop();
@@ -81,7 +81,7 @@ void Drive::resetToMode(MatchMode mode) {
     }
     else {
         // Brake all motors when enabled to help counteract pushing.
-        setIdleMode(ThunderMotorController::IdleMode::BRAKE);
+        setIdleMode(ThunderCANMotorController::IdleMode::BRAKE);
 
         /**
          * Calibrate the IMU if not already calibrated. This will cause the
@@ -551,7 +551,7 @@ void Drive::applyOffsets() {
     }
 }
 
-void Drive::setIdleMode(ThunderMotorController::IdleMode mode) {
+void Drive::setIdleMode(ThunderCANMotorController::IdleMode mode) {
     for (SwerveModule* module : swerveModules) {
         module->setIdleMode(mode);
     }

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Wrappers/MotorController/MotorController.h>
+#include <Wrappers/MotorController/CANMotorController.h>
 #include <Rev/CANSparkMax.h>
 #include <optional>
 
-class ThunderCANSparkMax : public ThunderMotorController {
+class ThunderCANSparkMax : public ThunderCANMotorController {
 public:
     ThunderCANSparkMax(int canID);
     ~ThunderCANSparkMax();
@@ -12,7 +12,7 @@ public:
     Vendor getVendor() const;
     int set(ControlMode mode, double value);
     double getPercentOutput() const;
-    double getEncoderPosition();
+    double getEncoderPosition() const;
     double getEncoderVelocity() const;
     int setEncoderPosition(double position);
     double getAlternateEncoderPosition();
@@ -34,7 +34,7 @@ public:
     int configFF(double gain, int slotID = 0, units::millisecond_t timeout = 50_ms);
     int configIZone(double gain, int slotID = 0, units::millisecond_t timeout = 50_ms);
     int configOutputRange(double min, double max, int slotID = 0, units::millisecond_t timeout = 50_ms);
-    void follow(ThunderMotorController* master);
+    void follow(ThunderCANMotorController* master);
     void* getRawMotorController();
 
 private:

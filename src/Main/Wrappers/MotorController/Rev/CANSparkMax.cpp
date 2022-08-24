@@ -2,15 +2,16 @@
 #include <cassert>
 
 ThunderCANSparkMax::ThunderCANSparkMax(int canID)
-: sparkMax(canID, rev::CANSparkMax::MotorType::kBrushless),
+: ThunderCANMotorController(canID),
+  sparkMax(canID, rev::CANSparkMax::MotorType::kBrushless),
   encoder(sparkMax.GetEncoder()),
   alternateEncoder(std::nullopt),
   pidController(sparkMax.GetPIDController()) { }
 
 ThunderCANSparkMax::~ThunderCANSparkMax() = default;
 
-ThunderMotorController::Vendor ThunderCANSparkMax::getVendor() const {
-    return ThunderMotorController::Vendor::REV;
+ThunderCANMotorController::Vendor ThunderCANSparkMax::getVendor() const {
+    return ThunderCANMotorController::Vendor::REV;
 }
 
 int ThunderCANSparkMax::set(ControlMode mode, double value) {
@@ -38,7 +39,7 @@ double ThunderCANSparkMax::getPercentOutput() const {
     return sparkMax.Get();
 }
 
-double ThunderCANSparkMax::getEncoderPosition() {
+double ThunderCANSparkMax::getEncoderPosition() const {
     return encoder.GetPosition();
 }
 
@@ -172,8 +173,8 @@ int ThunderCANSparkMax::configOutputRange(double min, double max, int slotID, un
     return static_cast<int>(error);
 }
 
-void ThunderCANSparkMax::follow(ThunderMotorController* master) {
-    assert(master && master->getVendor() == ThunderMotorController::Vendor::REV);
+void ThunderCANSparkMax::follow(ThunderCANMotorController* master) {
+    assert(master && master->getVendor() == ThunderCANMotorController::Vendor::REV);
     
     auto sparkMaxMaster = reinterpret_cast<rev::CANSparkMax*>(master->getRawMotorController());
     sparkMax.Follow(*sparkMaxMaster);
