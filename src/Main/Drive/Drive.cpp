@@ -189,10 +189,6 @@ bool Drive::isFinished() const {
     return driveMode == DriveMode::STOPPED;
 }
 
-void Drive::zeroRotation() {
-    resetOdometry();
-}
-
 void Drive::calibrateIMU() {
     imu.calibrate();
 
@@ -203,6 +199,8 @@ void Drive::calibrateIMU() {
     sleep(4);
     
     imuCalibrated = true;
+
+    resetOdometry();
 }
 
 bool Drive::isIMUCalibrated() {
