@@ -33,9 +33,12 @@ public:
         VICE_GRIP,
         RECORDING,
         DISABLED,
+        CUSTOM,
     };
 
     void setLEDMode(LEDMode mode);
+
+    void setCustomColor(frc::Color color);
 
 private:
     frc::AddressableLED strip { PWM_BLINKY_BLINKY };
@@ -59,4 +62,6 @@ private:
 
     std::size_t rgbOffset = 0,
                 hsvOffset = 0;
+
+    frc::Color customColor;
 };

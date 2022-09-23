@@ -84,6 +84,9 @@ void BlinkyBlinky::process() {
         case LEDMode::DISABLED:
             setInterp(kDisabledInterp);
             break;
+        case LEDMode::CUSTOM:
+            setColor(customColor);
+            break;
     }
 
     strip.SetData(stripBuffer);
@@ -96,6 +99,10 @@ void BlinkyBlinky::process() {
 
 void BlinkyBlinky::setLEDMode(LEDMode mode) {
     ledMode = mode;
+}
+
+void BlinkyBlinky::setCustomColor(frc::Color color) {
+    customColor = color;
 }
 
 #define DEAD_1_START 40
@@ -198,6 +205,9 @@ void BlinkyBlinky::sendFeedback() {
             break;
         case LEDMode::DISABLED:
             modeString = "disabled";
+            break;
+        case LEDMode::CUSTOM:
+            modeString = "custom";
             break;
     }
 

@@ -153,29 +153,44 @@ void Controls::doSwitchPanel() {
     }
 
     if (blinkyBlinky) {
-        if (switchPanel.getButton(4)) {
+        int mode = Feedback::getDouble("LED", "Mode", 0.0);
+
+        if (switchPanel.getButton(4) || mode == 4) {
             blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::OFF);
         }
-        else if (!drive->isIMUCalibrated()) {
-            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::CALIBRATING);
+        else if (mode == 0) {
+            if (!drive->isIMUCalibrated()) {
+                blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::CALIBRATING);
+            }
+            else if (getCurrentMode() == MatchMode::DISABLED) {
+                blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::DISABLED);
+            }
+            else if (driveRecording) {
+                blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::RECORDING);
+            }
+            else if (settings.isCraterMode) {
+                blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::CRATER_MODE);
+            }
+            else if (driveCtrlFlags & Drive::ControlFlag::BRICK) {
+                blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::BRICK);
+            }
+            else if (driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) {
+                blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::VICE_GRIP);
+            }
+            else {
+                blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::ALLIANCE);
+            }
         }
-        else if (getCurrentMode() == MatchMode::DISABLED) {
-            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::DISABLED);
-        }
-        else if (driveRecording) {
-            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::RECORDING);
-        }
-        else if (settings.isCraterMode) {
-            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::CRATER_MODE);
-        }
-        else if (driveCtrlFlags & Drive::ControlFlag::BRICK) {
-            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::BRICK);
-        }
-        else if (driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) {
-            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::VICE_GRIP);
-        }
-        else {
+        else if (mode == 1) {
             blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::ALLIANCE);
+        }
+        else if (mode == 2) {
+            blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::CUSTOM);
+            double r = Feedback::getDouble("LED", "Custom_Color_R", 0.0),
+                   g = Feedback::getDouble("LED", "Custom_Color_G", 0.0),
+                   b = Feedback::getDouble("LED", "Custom_Color_B", 0.0);
+            
+            blinkyBlinky->setCustomColor(frc::Color(r, g, b));
         }
     }
 }
