@@ -7,7 +7,7 @@
 Controls::Controls(Drive* drive, Limelight* limelight, BlinkyBlinky* blinkyBlinky)
 : drive(drive), limelight(limelight), blinkyBlinky(blinkyBlinky) { }
 
-Controls::~Controls() { }
+Controls::~Controls() = default;
 
 void Controls::process() {
     doDrive();
@@ -21,20 +21,19 @@ void Controls::processInDisabled() {
     using DriveButton = HardwareManager::DriveGameController::Button;
 
     bool toggleCamera = driveController.getButtonPressed(DriveButton::SQUARE);
-    bool zeroRotation = driveController.getButtonPressed(DriveButton::OPTIONS);
+    bool resetOdometry = driveController.getButtonPressed(DriveButton::OPTIONS);
     bool calIMU = driveController.getButtonPressed(DriveButton::SHARE);
 
     if (toggleCamera) {
         whichCamera = !whichCamera;
     }
 
-    if (zeroRotation) {
-        drive->zeroRotation();
+    if (resetOdometry) {
+        drive->resetOdometry();
     }
 
     if (calIMU) {
         drive->calibrateIMU();
-        drive->zeroRotation();
     }
 }
 
@@ -50,7 +49,7 @@ void Controls::doDrive() {
     double yVel = driveController.getAxis(DriveAxis::LEFT_Y);
     double angVel = driveController.getAxis(DriveAxis::RIGHT_X);
 
-    bool zeroRotation = driveController.getButtonPressed(DriveButton::OPTIONS);
+    bool resetOdometry = driveController.getButtonPressed(DriveButton::OPTIONS);
     bool calIMU = driveController.getButtonPressed(DriveButton::SHARE);
 
     bool wasBrickDrive = driveCtrlFlags & Drive::ControlFlag::BRICK;
@@ -77,13 +76,12 @@ void Controls::doDrive() {
         whichCamera = !whichCamera;
     }
 
-    if (zeroRotation) {
-        drive->zeroRotation();
+    if (resetOdometry) {
+        drive->resetOdometry();
     }
 
     if (calIMU) {
         drive->calibrateIMU();
-        drive->zeroRotation();
     }
 
     double finalXVel = 0.0,

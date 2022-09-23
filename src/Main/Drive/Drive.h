@@ -104,11 +104,6 @@ public:
     bool isFinished() const;
 
     /**
-     * Resets the rotation of the robot tracked by odometry.
-     */
-    void zeroRotation();
-
-    /**
      * Calibrates the IMU (Pauses the robot for 4 seconds while it
      * calibrates).
      */
