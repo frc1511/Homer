@@ -5,6 +5,7 @@
 #include <Basic/Mechanism.h>
 #include <Control/Controls.h>
 #include <Vision/Limelight.h>
+#include <Vision/Camera.h>
 #include <Drive/Drive.h>
 #include <Illumination/BlinkyBlinky.h>
 #include <Autonomous/Autonomous.h>
@@ -33,6 +34,7 @@ private:
     void reset(Mechanism::MatchMode mode);
 
     Limelight limelight;
+    Camera camera;
     
     Drive drive { &limelight };
     Autonomous autonomous { &drive };
@@ -53,5 +55,6 @@ private:
         &blinkyBlinky,
 #endif
         &limelight,
+        &camera,
     };
 };

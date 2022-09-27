@@ -153,7 +153,7 @@ void Controls::doSwitchPanel() {
     if (blinkyBlinky) {
         int mode = Feedback::getDouble("LED", "Mode", 0.0);
 
-        if (switchPanel.getButton(4) || mode == 4) {
+        if (switchPanel.getButton(4) || mode == 3) {
             blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::OFF);
         }
         else if (mode == 0) {

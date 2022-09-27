@@ -12,6 +12,8 @@ void Homer::RobotPeriodic() {
     for (Mechanism* mech : allMechanisms) {
         mech->sendFeedback();
     }
+
+    camera.process();
 }
 
 void Homer::AutonomousInit() {
