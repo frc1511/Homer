@@ -37,3 +37,7 @@
 // PWM
 
 #define PWM_BLINKY_BLINKY 0
+
+// USB
+
+#define USB_INTAKE_CAMERA 0
