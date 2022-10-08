@@ -1,13 +1,13 @@
 #include <Drive/Drive.h>
 
 // The file which magnetic encoder offsets are stored on the RoboRIO.
-#define ENCODER_OFFSETS_FILE_NAME "/home/lvuser/magnetic_encoder_offsets.txt"
+#define ENCODER_OFFSETS_PATH "/home/lvuser/magnetic_encoder_offsets.txt"
 
 // The maximum velocity during manual control.
-#define DRIVE_MANUAL_MAX_VELOCITY 1.5_mps
+#define DRIVE_MANUAL_MAX_VEL 1.5_mps
 
 // The maximum angular velocity during manual control.
-#define DRIVE_MANUAL_MAX_ANGULAR_VELOCITY 270_deg_per_s
+#define DRIVE_MANUAL_MAX_ANG_VEL 270_deg_per_s
 
 Drive::Drive(Limelight* limelight)
 : limelight(limelight), driveController(
@@ -52,6 +52,10 @@ void Drive::resetToMode(MatchMode mode) {
     // Reset the manual control data.
     manualData = {};
 
+    // Reset the rate limiters to 0.
+    driveRateLimiter.Reset(0_mps);
+    turnRateLimiter.Reset(0_rad_per_s);
+
     // This seems to be necessary. Don't ask me why.
     for (SwerveModule* module : swerveModules) {
         module->stop();
@@ -73,7 +77,7 @@ void Drive::resetToMode(MatchMode mode) {
              * Export the recorded trajectory to a CSV file on the RoboRIO so
              * it can be examined and/or played back later.
              */
-            trajectoryRecorder.writeToCSV(RECORDED_TRAJECTORY_FILE_NAME);
+            trajectoryRecorder.writeToCSV(RECORDED_TRAJ_PATH);
 
             // Reload the recorded trajectory from the file.
             reloadRecordedTrajectory();
@@ -227,7 +231,7 @@ frc::Rotation2d Drive::getRotation() {
 }
 
 void Drive::reloadRecordedTrajectory() {
-    recordedTrajectory = Trajectory(RECORDED_TRAJECTORY_FILE_NAME);
+    recordedTrajectory = Trajectory(RECORDED_TRAJ_PATH);
 }
 
 void Drive::updateOdometry() {
@@ -268,9 +272,25 @@ void Drive::execManual() {
      * Calculate chassis velocities using percentages of the configured max
      * manual control velocities.
      */
-    units::meters_per_second_t xVel = manualData.xPct * DRIVE_MANUAL_MAX_VELOCITY;
-    units::meters_per_second_t yVel = manualData.yPct * DRIVE_MANUAL_MAX_VELOCITY;
-    units::radians_per_second_t angVel = manualData.angPct * DRIVE_MANUAL_MAX_ANGULAR_VELOCITY;
+    units::meters_per_second_t xVel = manualData.xPct * DRIVE_MANUAL_MAX_VEL;
+    units::meters_per_second_t yVel = manualData.yPct * DRIVE_MANUAL_MAX_VEL;
+    units::radians_per_second_t angVel = manualData.angPct * DRIVE_MANUAL_MAX_ANG_VEL;
+
+    // The velocity of the robot using the component velocities.
+    units::meters_per_second_t vel = units::math::hypot(xVel, yVel);
+
+    // The heading of the robot's velocity.
+    units::radian_t head = units::math::atan2(yVel, xVel);
+
+    // Adjust the velocity using the configured acceleration and deceleration limits.
+    vel = driveRateLimiter.Calculate(vel);
+
+    // Calculate the new component velocities.
+    xVel = units::math::cos(head) * vel;
+    yVel = units::math::sin(head) * vel;
+
+    // Adjust the angular velocity using the configured acceleration and deceleration limits.
+    angVel = turnRateLimiter.Calculate(angVel);
 
     frc::Pose2d currPose(getPose());
 
@@ -499,7 +519,7 @@ void Drive::configMagneticEncoders() {
 
 bool Drive::readOffsetsFile() {
     // Open the file.
-    std::ifstream file(ENCODER_OFFSETS_FILE_NAME);
+    std::ifstream file(ENCODER_OFFSETS_PATH);
     
     // Make sure the file exists.
     if (!file) {
@@ -525,7 +545,7 @@ bool Drive::readOffsetsFile() {
 
 void Drive::writeOffsetsFile() {
     // Open the file (Will create a new file if it does not already exist).
-    std::ofstream offsetsFile(ENCODER_OFFSETS_FILE_NAME);
+    std::ofstream offsetsFile(ENCODER_OFFSETS_PATH);
     
     // Clear the contents of the file.
     offsetsFile.clear();

@@ -21,6 +21,7 @@
 #include <frc/controller/ProfiledPIDController.h>
 #include <frc/trajectory/TrapezoidProfile.h>
 #include <frc/controller/HolonomicDriveController.h>
+#include <frc/filter/SlewRateLimiter.h>
 #include <frc/Timer.h>
 #include <units/angle.h>
 #include <units/length.h>
@@ -41,13 +42,28 @@
 #define ROBOT_LENGTH 0.66_m
 
 // The maximum angular velocity during auto.
-#define DRIVE_AUTO_MAX_ANGULAR_VELOCITY 3.14_rad_per_s
+#define DRIVE_AUTO_MAX_ANG_VEL 3.14_rad_per_s
 
 // The maximum angular acceleration during auto.
-#define DRIVE_AUTO_MAX_ANGULAR_ACCELERATION 3.14_rad_per_s_sq
+#define DRIVE_AUTO_MAX_ANG_ACCEL 3.14_rad_per_s_sq
+
+// The maximum acceleration during manual control (Must be positive).
+#define DRIVE_MANUAL_MAX_ACCEL 2_mps_sq
+
+// The maximum deceleration during manual control (Must be negative).
+#define DRIVE_MANUAL_MAX_DECEL -1_mps_sq
+
+// The maximum angular acceleration during manual control (Must be positive).
+#define DRIVE_MANUAL_MAX_ANG_ACCEL 3.14_rad_per_s_sq
+
+// The maximum angular deceleration during manual control (Must be negative).
+#define DRIVE_MANUAL_MAX_ANG_DECEL -3.14_rad_per_s_sq
 
 // The path where the recorded trajectory is stored.
-#define RECORDED_TRAJECTORY_FILE_NAME "/home/lvuser/recorded_trajectory.csv"
+#define RECORDED_TRAJ_PATH "/home/lvuser/recorded_trajectory.csv"
+
+// The path where the motion profile is stored.
+#define MOTION_PROFILE_PATH "/home/lvuser/trajectory_motion.csv"
 
 // Drivetrain X and Y PID values.
 #define DRIVE_XY_P 0.4
@@ -241,6 +257,22 @@ private:
      */
     frc::SwerveDriveOdometry<4> odometry { kinematics, getRotation() };
 
+    /**
+     * The slew rate limiter to control x and y acceleration and
+     * deceleration during manual control.
+     * 
+     * NOTE: (Waiting for WPILib update to add deceleration)
+     */
+    frc::SlewRateLimiter<units::meters_per_second> driveRateLimiter { DRIVE_MANUAL_MAX_ACCEL }; // , DRIVE_MANUAL_MAX_DECEL };
+
+    /**
+     * The slew rate limiter to control angular acceleration and
+     * deceleration during manual control.
+     * 
+     * NOTE: (Waiting for WPILib update to add deceleration)
+     */
+    frc::SlewRateLimiter<units::radians_per_second> turnRateLimiter { DRIVE_MANUAL_MAX_ANG_ACCEL }; // , DRIVE_MANUAL_MAX_ANG_DECEL };
+
     enum class DriveMode {
         STOPPED,
         MANUAL,
@@ -268,7 +300,7 @@ private:
     units::second_t lastTeleopTime;
 
     // The recorded trajectory.
-    Trajectory recordedTrajectory { RECORDED_TRAJECTORY_FILE_NAME };
+    Trajectory recordedTrajectory { RECORDED_TRAJ_PATH };
 
     // The trajectory that is currently being run.
     const Trajectory* trajectory = nullptr;
@@ -291,7 +323,7 @@ private:
     // PID Controller for angular drivetrain movement.
     frc::ProfiledPIDController<units::radians> thetaPIDController {
         DRIVE_THETA_P, DRIVE_THETA_I, DRIVE_THETA_D,
-        frc::TrapezoidProfile<units::radians>::Constraints(DRIVE_AUTO_MAX_ANGULAR_VELOCITY, DRIVE_AUTO_MAX_ANGULAR_ACCELERATION)
+        frc::TrapezoidProfile<units::radians>::Constraints(DRIVE_AUTO_MAX_ANG_VEL, DRIVE_AUTO_MAX_ANG_ACCEL)
     };
 
     // The drive controller that will handle the drivetrain movement.
@@ -302,5 +334,5 @@ private:
     frc::Pose2d targetPose;
 
     // CSV File on the RoboRIO to log drivetrain motion when running a trajectory.
-    std::ofstream trajectoryMotionFile { "/home/lvuser/trajectory_motion.csv" };
+    std::ofstream trajectoryMotionFile { MOTION_PROFILE_PATH };
 };

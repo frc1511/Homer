@@ -96,8 +96,8 @@ private:
     // The absolute encoder.
     HardwareManager::SwerveTurningEncoder turningAbsEncoder;
 
-    // The offset of the CANCoder.
-    units::radian_t canCoderOffset = 0_rad;
+    // The offset of the turning absolute encoder.
+    units::radian_t absEncoderOffset = 0_rad;
 
     // The target rotation of the swerve module.
     units::degree_t targetRotation = 0_deg;
