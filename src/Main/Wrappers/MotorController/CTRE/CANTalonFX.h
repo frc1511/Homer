@@ -20,6 +20,7 @@ public:
     int setIdleMode(IdleMode mode);
     void setInverted(bool isInverted);
     bool getInverted() const;
+    units::ampere_t getOutputCurrent() const;
     int configFactoryDefault(units::millisecond_t timeout = 50_ms);
     int configOpenLoopRamp(units::second_t seconds, units::millisecond_t timeout = 50_ms);
     int configClosedLoopRamp(units::second_t seconds, units::millisecond_t timeout = 50_ms);

@@ -83,6 +83,11 @@ public:
     virtual bool getInverted() const { return false; }
 
     /**
+     * Returns the output current of the motor.
+     */
+    virtual units::ampere_t getOutputCurrent() const { return 0_A; }
+
+    /**
      * Reverts all configurations to factory default values.
      */
     virtual int configFactoryDefault(units::millisecond_t timeout = 50_ms) { return 0; }

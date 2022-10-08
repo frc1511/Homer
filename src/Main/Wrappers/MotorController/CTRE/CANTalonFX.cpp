@@ -83,6 +83,10 @@ bool ThunderCANTalonFX::getInverted() const {
     return talon.GetInverted();
 }
 
+units::ampere_t ThunderCANTalonFX::getOutputCurrent() const {
+    return units::ampere_t(talon.GetOutputCurrent());
+}
+
 int ThunderCANTalonFX::configFactoryDefault(units::millisecond_t timeout) {
    ctre::phoenix::ErrorCode error = talon.ConfigFactoryDefault(timeout.value());
 

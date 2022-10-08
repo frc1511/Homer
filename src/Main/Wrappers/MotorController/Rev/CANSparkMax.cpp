@@ -97,6 +97,10 @@ bool ThunderCANSparkMax::getInverted() const {
     return sparkMax.GetInverted();
 }
 
+units::ampere_t ThunderCANSparkMax::getOutputCurrent() const {
+    return units::ampere_t(sparkMax.GetOutputCurrent());
+}
+
 int ThunderCANSparkMax::configFactoryDefault(units::millisecond_t timeout) {
     rev::REVLibError error = sparkMax.RestoreFactoryDefaults();
     
