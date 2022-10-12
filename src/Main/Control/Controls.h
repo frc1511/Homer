@@ -15,6 +15,7 @@ public:
     void process() override;
     void processInDisabled();
     void sendFeedback() override;
+    void resetToMode(MatchMode mode) override;
 
     bool getShouldPersistConfig();
     
@@ -33,6 +34,8 @@ private:
     unsigned driveCtrlFlags = Drive::ControlFlag::NONE;
 
     bool driveRecording = false;
+    bool driveAbsRotation = false;
+    units::radian_t driveAbsAngle = 0_deg;
 
     Drive* drive;
     Limelight* limelight;

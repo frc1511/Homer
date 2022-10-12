@@ -15,6 +15,10 @@ void Controls::process() {
     doSwitchPanel();
 }
 
+void Controls::resetToMode(MatchMode mode) {
+    driveAbsAngle = drive->getPose().Rotation().Radians();    
+}
+
 void Controls::processInDisabled() {
     doSwitchPanel();
 
@@ -49,6 +53,9 @@ void Controls::doDrive() {
     double yVel = driveController.getAxis(DriveAxis::LEFT_Y);
     double angVel = driveController.getAxis(DriveAxis::RIGHT_X);
 
+    double xAng = driveController.getAxis(DriveAxis::RIGHT_X);
+    double yAng = driveController.getAxis(DriveAxis::RIGHT_Y);
+
     bool resetOdometry = driveController.getButtonPressed(DriveButton::OPTIONS);
     bool calIMU = driveController.getButtonPressed(DriveButton::SHARE);
 
@@ -78,19 +85,24 @@ void Controls::doDrive() {
 
     if (resetOdometry) {
         drive->resetOdometry();
+        driveAbsAngle = drive->getPose().Rotation().Radians();
     }
 
     if (calIMU) {
         drive->calibrateIMU();
+        driveAbsAngle = drive->getPose().Rotation().Radians();
     }
 
     double finalXVel = 0.0,
            finalYVel = 0.0,
-           finalAngVel = 0.0;
+           finalAngVel = 0.0,
+           finalXAng = 0.0,
+           finalYAng = 0.0;
 
     // Improves the joystick axis to be smoother and easier to control.
     auto improveAxis = [](double axis) -> double {
-        return std::sin(axis * (wpi::numbers::pi / 2.0));
+        return axis;
+        //return std::sin(axis * (wpi::numbers::pi / 2.0));
     };
 
     if (std::fabs(xVel) > AXIS_DEADZONE) {
@@ -102,10 +114,17 @@ void Controls::doDrive() {
     if (std::fabs(angVel) > AXIS_DEADZONE) {
         finalAngVel = improveAxis(angVel);
     }
+    if (std::fabs(xAng) > AXIS_DEADZONE) {
+        finalXAng = xAng;
+    }
+    if (std::fabs(yAng) > AXIS_DEADZONE) {
+        finalYAng = yAng;
+    }
 
     // Returns whether the robot should be moving.
     auto isMoving = [&]() -> bool {
-        return (driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) || finalXVel || finalYVel || finalAngVel;
+        bool r = driveAbsRotation ? finalXAng || finalYAng : finalAngVel;
+        return (driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) || finalXVel || finalYVel || r;
     };
 
     // Stay in brick drive mode if the robot isn't moving.
@@ -113,8 +132,18 @@ void Controls::doDrive() {
         driveCtrlFlags |= Drive::ControlFlag::BRICK;
     }
 
-    // Control the drivetrain.
-    drive->manualControl(finalXVel, -finalYVel, -finalAngVel, driveCtrlFlags);
+    // Control the drivetrain.    
+    if (driveAbsRotation) {
+        if (finalYAng || finalXAng) {
+            driveAbsAngle = units::radian_t(std::atan2(-finalYAng, finalXAng)) - 90_deg;
+        }
+
+        drive->manualControlAbsRotation(finalXVel, -finalYVel, driveAbsAngle, driveCtrlFlags);
+    }
+    else {
+        drive->manualControlRelRotation(finalXVel, -finalYVel, -finalAngVel, driveCtrlFlags);
+    }
+
 }
 
 bool Controls::getShouldPersistConfig() {
@@ -139,6 +168,11 @@ void Controls::doSwitchPanel() {
     settings.isCraterMode = switchPanel.getButton(1);
     driveRobotCentric = switchPanel.getButton(2);
     driveRecording = switchPanel.getButton(3);
+    bool wasDriveAbsRotation = driveAbsRotation;
+    driveAbsRotation = switchPanel.getButton(6);
+    if (driveAbsRotation && !wasDriveAbsRotation) {
+        driveAbsAngle = drive->getPose().Rotation().Radians();
+    }
 
     // Only turn on limelight when broken switch is on or the drivetrain is vice gripping.
     if (switchPanel.getButton(5) || driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) {

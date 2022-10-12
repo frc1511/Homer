@@ -3,20 +3,16 @@
 // The file which magnetic encoder offsets are stored on the RoboRIO.
 #define ENCODER_OFFSETS_PATH "/home/lvuser/magnetic_encoder_offsets.txt"
 
-// The maximum velocity during manual control.
-#define DRIVE_MANUAL_MAX_VEL 1.5_mps
-
-// The maximum angular velocity during manual control.
-#define DRIVE_MANUAL_MAX_ANG_VEL 270_deg_per_s
-
 Drive::Drive(Limelight* limelight)
 : limelight(limelight), driveController(
     [&]() -> frc::HolonomicDriveController {
         // Set the angular PID controller range from -180 to 180 degrees.
-        thetaPIDController.EnableContinuousInput(units::radian_t(-180_deg), units::radian_t(180_deg));
+        trajectoryThetaPIDController.EnableContinuousInput(units::radian_t(-180_deg), units::radian_t(180_deg));
         // Setup the drive controller with the individual axis PID controllers.
-        return frc::HolonomicDriveController(xPIDController, yPIDController, thetaPIDController);
+        return frc::HolonomicDriveController(xPIDController, yPIDController, trajectoryThetaPIDController);
     } ()) {
+
+    manualThetaPIDController.EnableContinuousInput(units::radian_t(-180_deg), units::radian_t(180_deg));
 
     // 4s is good?
     imu.configCalTime(ThunderIMU::CalibrationTime::_4s);
@@ -141,7 +137,7 @@ void Drive::process() {
     }
 }
 
-void Drive::manualControl(double xPct, double yPct, double angPct, unsigned flags) {
+void Drive::manualControlRelRotation(double xPct, double yPct, double angPct, unsigned flags) {
     // Stop the robot in brick mode no matter what.
     if (flags & ControlFlag::BRICK) {
         driveMode = DriveMode::STOPPED;
@@ -160,6 +156,27 @@ void Drive::manualControl(double xPct, double yPct, double angPct, unsigned flag
     }
 
     manualData = { xPct, yPct, angPct, flags };
+}
+
+void Drive::manualControlAbsRotation(double xPct, double yPct, units::radian_t angle, unsigned flags) {
+    units::radian_t currAngle = getPose().Rotation().Radians();
+
+    // Reset the PID controller.
+    static bool firstRun = true;
+    if (firstRun) {
+        manualThetaPIDController.Reset(currAngle);
+        firstRun = false;
+    }
+
+    auto angVel = units::radians_per_second_t(
+        manualThetaPIDController.Calculate(currAngle, angle)
+    );
+
+    std::cout << "ang vel " << angVel.value() << '\n';
+
+    double angPct = (angVel / DRIVE_MANUAL_MAX_ANG_VEL).value();
+
+    manualControlRelRotation(xPct, yPct, angPct, flags);
 }
 
 void Drive::runTrajectory(const Trajectory& _trajectory, const std::map<u_int32_t, Action*>& actionMap) {
@@ -306,7 +323,7 @@ void Drive::execManual() {
         // Reset the PID controller.
         static bool firstRun = true;
         if (firstRun) {
-            thetaPIDController.Reset(currentRotation);
+            trajectoryThetaPIDController.Reset(currentRotation);
             firstRun = false;
         }
 
@@ -315,7 +332,7 @@ void Drive::execManual() {
          * current rotation and the target rotation.
          */
         angVel = units::radians_per_second_t(
-            thetaPIDController.Calculate(currentRotation, currentRotation + angleToTurn)
+            trajectoryThetaPIDController.Calculate(currentRotation, currentRotation + angleToTurn)
         );
     }
 

@@ -47,17 +47,23 @@
 // The maximum angular acceleration during auto.
 #define DRIVE_AUTO_MAX_ANG_ACCEL 3.14_rad_per_s_sq
 
+// The maximum velocity during manual control.
+#define DRIVE_MANUAL_MAX_VEL 1.5_mps
+
+// The maximum angular velocity during manual control.
+#define DRIVE_MANUAL_MAX_ANG_VEL 360_deg_per_s
+
 // The maximum acceleration during manual control (Must be positive).
-#define DRIVE_MANUAL_MAX_ACCEL 2_mps_sq
+#define DRIVE_MANUAL_MAX_ACCEL 3_mps_sq
 
 // The maximum deceleration during manual control (Must be negative).
-#define DRIVE_MANUAL_MAX_DECEL -1_mps_sq
+#define DRIVE_MANUAL_MAX_DECEL -4_mps_sq
 
 // The maximum angular acceleration during manual control (Must be positive).
-#define DRIVE_MANUAL_MAX_ANG_ACCEL 3.14_rad_per_s_sq
+#define DRIVE_MANUAL_MAX_ANG_ACCEL 6.28_rad_per_s_sq
 
 // The maximum angular deceleration during manual control (Must be negative).
-#define DRIVE_MANUAL_MAX_ANG_DECEL -3.14_rad_per_s_sq
+#define DRIVE_MANUAL_MAX_ANG_DECEL -6.28_rad_per_s_sq
 
 // The path where the recorded trajectory is stored.
 #define RECORDED_TRAJ_PATH "/home/lvuser/recorded_trajectory.csv"
@@ -71,7 +77,7 @@
 #define DRIVE_XY_D 0.02
 
 // Drivetrain Theta PID values.
-#define DRIVE_THETA_P 5
+#define DRIVE_THETA_P 3.0
 #define DRIVE_THETA_I 0.0
 #define DRIVE_THETA_D 0.0
 
@@ -107,7 +113,9 @@ public:
      * 
      * Control flags are used to control the behavior of the drivetrain.
      */
-    void manualControl(double xPct, double yPct, double angPct, unsigned flags);
+    void manualControlRelRotation(double xPct, double yPct, double angPct, unsigned flags);
+
+    void manualControlAbsRotation(double xPct, double yPct, units::radian_t angle, unsigned flags);
 
     /**
      * Runs a trajectory.
@@ -321,9 +329,15 @@ private:
                        yPIDController { DRIVE_XY_P, DRIVE_XY_I, DRIVE_XY_D };
 
     // PID Controller for angular drivetrain movement.
-    frc::ProfiledPIDController<units::radians> thetaPIDController {
+    frc::ProfiledPIDController<units::radians> trajectoryThetaPIDController {
         DRIVE_THETA_P, DRIVE_THETA_I, DRIVE_THETA_D,
         frc::TrapezoidProfile<units::radians>::Constraints(DRIVE_AUTO_MAX_ANG_VEL, DRIVE_AUTO_MAX_ANG_ACCEL)
+    };
+    
+    // PID Controller for angular drivetrain movement.
+    frc::ProfiledPIDController<units::radians> manualThetaPIDController {
+        DRIVE_THETA_P, DRIVE_THETA_I, DRIVE_THETA_D,
+        frc::TrapezoidProfile<units::radians>::Constraints(DRIVE_MANUAL_MAX_ANG_VEL, DRIVE_MANUAL_MAX_ANG_ACCEL)
     };
 
     // The drive controller that will handle the drivetrain movement.
