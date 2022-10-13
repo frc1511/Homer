@@ -623,13 +623,13 @@ void Drive::sendFeedback() {
     Feedback::sendBoolean("Drive", "recording", manualData.flags & ControlFlag::RECORDING);
 
     // Feedback for the motion profile.
-    Feedback::sendDouble("DriveCSV", "x_pos", pose.X().value());
-    Feedback::sendDouble("DriveCSV", "y_pos", pose.Y().value());
-    Feedback::sendDouble("DriveCSV", "t_x_pos", targetPose.X().value());
-    Feedback::sendDouble("DriveCSV", "t_y_pos", targetPose.Y().value());
-    Feedback::sendDouble("DriveCSV", "x_vel", chassisSpeeds.vx.value());
-    Feedback::sendDouble("DriveCSV", "y_vel", chassisSpeeds.vy.value());
-    Feedback::sendDouble("DriveCSV", "ang_vel", chassisSpeeds.omega.value());
-    Feedback::sendDouble("DriveCSV", "ang", pose.Rotation().Radians().value());
-    Feedback::sendDouble("DriveCSV", "t_ang", targetPose.Rotation().Radians().value());
+    Feedback::sendDouble("thunderdashboard_drive", "x_pos", pose.X().value());
+    Feedback::sendDouble("thunderdashboard_drive", "y_pos", pose.Y().value());
+    Feedback::sendDouble("thunderdashboard_drive", "target_x_pos", targetPose.X().value());
+    Feedback::sendDouble("thunderdashboard_drive", "target_y_pos", targetPose.Y().value());
+    Feedback::sendDouble("thunderdashboard_drive", "x_vel", chassisSpeeds.vx.value());
+    Feedback::sendDouble("thunderdashboard_drive", "y_vel", chassisSpeeds.vy.value());
+    Feedback::sendDouble("thunderdashboard_drive", "ang_vel", chassisSpeeds.omega.value());
+    Feedback::sendDouble("thunderdashboard_drive", "ang", pose.Rotation().Radians().value());
+    Feedback::sendDouble("thunderdashboard_drive", "target_ang", targetPose.Rotation().Radians().value());
 }
