@@ -48,6 +48,7 @@ void Controls::doDrive() {
     bool brickDrive = driveController.getButton(DriveButton::CROSS);
     bool viceGrip = driveController.getButton(DriveButton::CIRCLE);
     bool toggleCamera = driveController.getButtonPressed(DriveButton::SQUARE);
+    bool toggleRotation = driveController.getButtonPressed(DriveButton::TRIANGLE);
 
     double xVel = driveController.getAxis(DriveAxis::LEFT_X);
     double yVel = driveController.getAxis(DriveAxis::LEFT_Y);
@@ -81,6 +82,16 @@ void Controls::doDrive() {
 
     if (toggleCamera) {
         whichCamera = !whichCamera;
+    }
+
+    if (toggleRotation) {
+        if (!driveAbsRotation) {
+            driveAbsAngle = drive->getPose().Rotation().Radians();
+            driveAbsRotation = true;
+        }
+        else {
+            driveAbsRotation = false;
+        }
     }
 
     if (resetOdometry) {
@@ -168,11 +179,6 @@ void Controls::doSwitchPanel() {
     settings.isCraterMode = switchPanel.getButton(1);
     driveRobotCentric = switchPanel.getButton(2);
     driveRecording = switchPanel.getButton(3);
-    bool wasDriveAbsRotation = driveAbsRotation;
-    driveAbsRotation = switchPanel.getButton(6);
-    if (driveAbsRotation && !wasDriveAbsRotation) {
-        driveAbsAngle = drive->getPose().Rotation().Radians();
-    }
 
     // Only turn on limelight when broken switch is on or the drivetrain is vice gripping.
     if (switchPanel.getButton(5) || driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) {

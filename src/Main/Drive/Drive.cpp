@@ -172,8 +172,6 @@ void Drive::manualControlAbsRotation(double xPct, double yPct, units::radian_t a
         manualThetaPIDController.Calculate(currAngle, angle)
     );
 
-    std::cout << "ang vel " << angVel.value() << '\n';
-
     double angPct = (angVel / DRIVE_MANUAL_MAX_ANG_VEL).value();
 
     manualControlRelRotation(xPct, yPct, angPct, flags);

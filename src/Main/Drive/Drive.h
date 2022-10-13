@@ -77,9 +77,9 @@
 #define DRIVE_XY_D 0.02
 
 // Drivetrain Theta PID values.
-#define DRIVE_THETA_P 3.0
+#define DRIVE_THETA_P 4.0
 #define DRIVE_THETA_I 0.0
-#define DRIVE_THETA_D 0.0
+#define DRIVE_THETA_D 0.1
 
 class Drive : public Mechanism {
 public:
