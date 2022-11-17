@@ -6,6 +6,7 @@
 #include <Hardware/IOMap.h>
 #include <Illumination/BlinkyBlinky.h>
 #include <Vision/Limelight.h>
+#include <numbers>
 
 class Controls : public Mechanism {
 public:

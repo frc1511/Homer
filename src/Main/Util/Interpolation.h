@@ -2,6 +2,7 @@
 
 #include <map>
 #include <optional>
+#include <stdexcept>
 
 /**
  * Represents a map that can be used for linear interpolation between defined

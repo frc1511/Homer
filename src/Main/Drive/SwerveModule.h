@@ -5,10 +5,11 @@
 #include <Basic/Mechanism.h>
 #include <Basic/Feedback.h>
 #include <frc/kinematics/SwerveModuleState.h>
+#include <frc/kinematics/SwerveModulePosition.h>
 #include <units/angle.h>
 #include <units/velocity.h>
 #include <units/current.h>
-#include <wpi/numbers>
+#include <numbers>
 #include <iostream>
 
 class SwerveModule : public Mechanism {
@@ -33,6 +34,11 @@ public:
      * Returns the current state of the swerve module (Velocity and angle).
      */
     frc::SwerveModuleState getState();
+
+    /**
+     * Returns the current position of the swerve module (Position and angle).
+     */
+    frc::SwerveModulePosition getPosition();
 
     /**
      * Returns the raw rotation of the absolute turning encoder (Without
@@ -86,6 +92,11 @@ private:
      * Returns the current velocity of the drive motor (meters per second).
      */
     units::meters_per_second_t getDriveVelocity();
+
+    /**
+     * Returns the current position of the drive motor (meters).
+     */
+    units::meter_t getDrivePosition();
 
     // The drive motor.
     HardwareManager::SwerveDriveMotor driveMotor;

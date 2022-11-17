@@ -15,6 +15,8 @@
 #include <frc/geometry/Pose2d.h>
 #include <frc/kinematics/SwerveDriveKinematics.h>
 #include <frc/kinematics/SwerveDriveOdometry.h>
+#include <frc/estimator/SwerveDrivePoseEstimator.h>
+#include <frc/kinematics/SwerveModulePosition.h>
 #include <frc/kinematics/SwerveModuleState.h>
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc/controller/PIDController.h>
@@ -29,12 +31,11 @@
 #include <units/velocity.h>
 #include <units/angular_acceleration.h>
 #include <units/math.h>
-#include <wpi/numbers>
-#include <array>
+#include <wpi/array.h>
+#include <numbers>
 #include <fstream>
 #include <map>
 #include <algorithm>
-#include <frc/Timer.h>
 
 // The width of the robot.
 #define ROBOT_WIDTH 0.362_m
@@ -226,6 +227,11 @@ private:
      */
     void setModuleStates(frc::ChassisSpeeds speeds);
 
+    /**
+     * Returns the positions of the swerve modules.
+     */
+    wpi::array<frc::SwerveModulePosition, 4> getModulePositions();
+
     // Vision camera.
     Limelight* limelight;
 
@@ -235,7 +241,7 @@ private:
     bool imuCalibrated = false;
 
     // The locations of the swerve modules on the robot.
-    std::array<frc::Translation2d, 4> locations {
+    wpi::array<frc::Translation2d, 4> locations {
         frc::Translation2d(-ROBOT_WIDTH/2, +ROBOT_LENGTH/2), // Front left.
         frc::Translation2d(-ROBOT_WIDTH/2, -ROBOT_LENGTH/2), // Back left.
         frc::Translation2d(+ROBOT_WIDTH/2, -ROBOT_LENGTH/2), // Back right.
@@ -243,7 +249,7 @@ private:
     };
 
     // The swerve modules on the robot.
-    std::array<SwerveModule*, 4> swerveModules {
+    wpi::array<SwerveModule*, 4> swerveModules {
       new SwerveModule(CAN_SWERVE_DRIVE_MOTOR_FL, CAN_SWERVE_ROT_MOTOR_FL, CAN_SWERVE_CAN_CODER_FL, true),
       new SwerveModule(CAN_SWERVE_DRIVE_MOTOR_BL, CAN_SWERVE_ROT_MOTOR_BL, CAN_SWERVE_CAN_CODER_BL, true),
       new SwerveModule(CAN_SWERVE_DRIVE_MOTOR_BR, CAN_SWERVE_ROT_MOTOR_BR, CAN_SWERVE_CAN_CODER_BR, true),
@@ -251,7 +257,7 @@ private:
     };
 
     // The magnetic encoder offsets of the swerve modules.
-    std::array<units::radian_t, 4> offsets { 0_rad, 0_rad, 0_rad, 0_rad };
+    wpi::array<units::radian_t, 4> offsets { 0_rad, 0_rad, 0_rad, 0_rad };
 
     /**
      * The helper class that it used to convert chassis speeds into swerve
@@ -263,7 +269,7 @@ private:
      * The class that handles tracking the position of the robot on the
      * field during the match.
      */
-    frc::SwerveDriveOdometry<4> odometry { kinematics, getRotation() };
+    frc::SwerveDriveOdometry<4> odometry { kinematics, getRotation(), getModulePositions() };
 
     /**
      * The slew rate limiter to control x and y acceleration and

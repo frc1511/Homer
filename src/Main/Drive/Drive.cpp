@@ -231,7 +231,7 @@ void Drive::resetOdometry(frc::Pose2d pose) {
      * Resets the position and rotation of the robot to a given pose
      * while ofsetting for the IMU's recorded rotation.
      */
-    odometry.ResetPosition(pose, getRotation());
+    odometry.ResetPosition(pose, getRotation(), getModulePositions());
 }
 
 frc::Pose2d Drive::getPose() {
@@ -251,17 +251,12 @@ void Drive::reloadRecordedTrajectory() {
 
 void Drive::updateOdometry() {
     /**
-     * Using the rotation of the robot and the state (velocity
+     * Using the rotation of the robot and the position (position
      * and rotation) of each swerve module, the odometry class is
      * able to calculate the robot's approximate position and
      * rotation on the field.
      */
-    odometry.Update(getRotation(),
-        swerveModules.at(0)->getState(),
-        swerveModules.at(1)->getState(),
-        swerveModules.at(2)->getState(),
-        swerveModules.at(3)->getState()
-    );
+    odometry.Update(getRotation(), getModulePositions());
 }
 
 void Drive::execStopped() {
@@ -600,6 +595,11 @@ void Drive::setModuleStates(frc::ChassisSpeeds speeds) {
     }
 }
 
+wpi::array<frc::SwerveModulePosition, 4> Drive::getModulePositions() {
+    return { swerveModules.at(0)->getPosition(), swerveModules.at(1)->getPosition(),
+             swerveModules.at(2)->getPosition(), swerveModules.at(3)->getPosition() };
+}
+
 void Drive::sendFeedback() {
     // Module feedback.
     for (std::size_t i = 0; i < swerveModules.size(); i++) {
@@ -613,9 +613,9 @@ void Drive::sendFeedback() {
     Feedback::sendDouble("Drive", "y position (m)", pose.Y().value());
     Feedback::sendDouble("Drive", "rotation (deg)", getRotation().Degrees().value());
 
-    Feedback::sendDouble("Drive", "manual x%", manualData.xPct);
-    Feedback::sendDouble("Drive", "manual y%", manualData.yPct);
-    Feedback::sendDouble("Drive", "manual angular%", manualData.angPct);
+    Feedback::sendDouble("Drive", "manual x %", manualData.xPct);
+    Feedback::sendDouble("Drive", "manual y %", manualData.yPct);
+    Feedback::sendDouble("Drive", "manual angular %", manualData.angPct);
 
     Feedback::sendBoolean("Drive", "field centric", manualData.flags & ControlFlag::FIELD_CENTRIC);
     Feedback::sendBoolean("Drive", "vice grip", manualData.flags & ControlFlag::VICE_GRIP);

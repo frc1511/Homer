@@ -13,8 +13,8 @@ static const ColorInterpolation kBlueInterp(
 );
 
 static const ColorInterpolation kHomeDeoptInterp(
-    {1, 0.0501960784313725, 0}, // Low: 255, 13, 0
-    {1, 0.12156862745098, 0},   // High: 255, 77, 0
+    {1.0f, 0.0501960784313725f, 0.0f}, // Low: 255, 13, 0
+    {1.0f, 0.12156862745098f, 0.0f},   // High: 255, 77, 0
     LED_ENABLED_NUM_TOTAL
 );
 
@@ -31,8 +31,8 @@ static const ColorInterpolation kCalibratingInterp(
 );
 
 static const ColorInterpolation kDisabledInterp(
-    {1, 0.0501960784313725, 0}, // Low: 255, 13, 0
-    {1, 0.12156862745098, 0},   // High: 255, 77, 0
+    {1.0f, 0.0501960784313725f, 0.0f}, // Low: 255, 13, 0
+    {1.0f, 0.12156862745098f, 0.0f},   // High: 255, 77, 0
     LED_ENABLED_NUM_TOTAL
 );
 

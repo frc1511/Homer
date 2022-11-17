@@ -143,6 +143,11 @@ frc::SwerveModuleState SwerveModule::getState() {
     return { getDriveVelocity(), getAbsoluteRotation() };
 }
 
+frc::SwerveModulePosition SwerveModule::getPosition() {
+    // The position and rotation of the swerve module.
+    return { getDrivePosition(), getAbsoluteRotation() };
+}
+
 units::radian_t SwerveModule::getRawRotation() {
     return turningAbsEncoder.getAbsolutePosition();
 }
@@ -155,11 +160,11 @@ void SwerveModule::setTurningMotor(units::radian_t angle) {
      * Fix the discontinuity problem by converting a -2π to 2π value into -π to π value.
      * If the value is above π rad or below -π rad...
      */
-    if(units::math::abs(angleDelta).value() > wpi::numbers::pi) {
+    if(units::math::abs(angleDelta).value() > std::numbers::pi) {
         int sign = std::signbit(angleDelta.value()) ? -1 : 1;
         
         // Subtract 2π rad, or add 2π rad depending on the sign.
-        angleDelta = units::radian_t(angleDelta.value() - (2 * wpi::numbers::pi) * sign);
+        angleDelta = units::radian_t(angleDelta.value() - (2 * std::numbers::pi) * sign);
     }
 
     // Add back the absolute rotation to get the desired angle.
@@ -214,6 +219,13 @@ units::meters_per_second_t SwerveModule::getDriveVelocity() {
     double mps = (driveMotor.getEncoderVelocity() / 60) * DRIVE_ENCODER_TO_METER_FACTOR;
     
     return units::meters_per_second_t(mps);
+}
+
+units::meter_t SwerveModule::getDrivePosition() {
+    // Convert the rotations to meters.
+    double m = driveMotor.getEncoderPosition() * DRIVE_ENCODER_TO_METER_FACTOR;
+
+    return units::meter_t(m);
 }
 
 void SwerveModule::sendFeedback(std::size_t moduleIndex) {

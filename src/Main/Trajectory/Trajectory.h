@@ -5,9 +5,9 @@
 #include <units/velocity.h>
 #include <frc/geometry/Rotation2d.h>
 #include <frc/geometry/Pose2d.h>
-#include <wpi/numbers>
 #include <units/math.h>
 #include <map>
+#include <numbers>
 #include <cstdint>
 
 /**
