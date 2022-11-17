@@ -41,6 +41,11 @@ public:
     frc::SwerveModulePosition getPosition();
 
     /**
+     * Resets the drive encoder positions.
+     */
+    void resetDrivePosition();
+
+    /**
      * Returns the raw rotation of the absolute turning encoder (Without
      * offsets applied).
      */

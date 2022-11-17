@@ -14,7 +14,6 @@
 #include <frc/geometry/Rotation2d.h>
 #include <frc/geometry/Pose2d.h>
 #include <frc/kinematics/SwerveDriveKinematics.h>
-#include <frc/kinematics/SwerveDriveOdometry.h>
 #include <frc/estimator/SwerveDrivePoseEstimator.h>
 #include <frc/kinematics/SwerveModulePosition.h>
 #include <frc/kinematics/SwerveModuleState.h>
@@ -148,7 +147,7 @@ public:
     /**
      * Returns the position and rotation of the robot on the field.
      */
-    frc::Pose2d getPose();
+    frc::Pose2d getEstimatedPose();
 
     /**
      * Returns the raw rotation of the robot as recorded by the IMU.
@@ -226,6 +225,10 @@ private:
      * Sets the velocities of the drivetrain.
      */
     void setModuleStates(frc::ChassisSpeeds speeds);
+    /**
+     * Returns the states of the swerve modules.
+     */
+    wpi::array<frc::SwerveModuleState, 4> getModuleStates();
 
     /**
      * Returns the positions of the swerve modules.
@@ -269,7 +272,15 @@ private:
      * The class that handles tracking the position of the robot on the
      * field during the match.
      */
-    frc::SwerveDriveOdometry<4> odometry { kinematics, getRotation(), getModulePositions() };
+    frc::SwerveDrivePoseEstimator<4> poseEstimator {
+        frc::Rotation2d(),
+        frc::Pose2d(),
+        getModulePositions(),
+        kinematics,
+        { 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 }, // Standard deviations of model states.
+        { 0.05, 0.05, 0.05, 0.05, 0.05 }, // Standard deviations of the encoder and gyro measurements.
+        { 0.1, 0.1, 0.1 } // Standard deviations of the vision measurements.
+    };
 
     /**
      * The slew rate limiter to control x and y acceleration and

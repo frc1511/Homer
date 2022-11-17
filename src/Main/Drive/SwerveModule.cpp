@@ -105,7 +105,7 @@ void SwerveModule::doPersistentConfiguration() {
 void SwerveModule::stop() {
     turningMotor.set(ThunderCANMotorController::ControlMode::PERCENT_OUTPUT, 0.0);
     driveMotor.set(ThunderCANMotorController::ControlMode::PERCENT_OUTPUT, 0.0);
-    driveMotor.setEncoderPosition(0.0);
+    resetDrivePosition();
 }
 
 void SwerveModule::setState(frc::SwerveModuleState targetState) {
@@ -146,6 +146,10 @@ frc::SwerveModuleState SwerveModule::getState() {
 frc::SwerveModulePosition SwerveModule::getPosition() {
     // The position and rotation of the swerve module.
     return { getDrivePosition(), getAbsoluteRotation() };
+}
+
+void SwerveModule::resetDrivePosition() {
+    driveMotor.setEncoderPosition(0.0);
 }
 
 units::radian_t SwerveModule::getRawRotation() {

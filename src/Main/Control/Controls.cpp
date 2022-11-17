@@ -15,7 +15,7 @@ void Controls::process() {
 }
 
 void Controls::resetToMode(MatchMode mode) {
-    driveAbsAngle = drive->getPose().Rotation().Radians();    
+    driveAbsAngle = drive->getEstimatedPose().Rotation().Radians();    
 }
 
 void Controls::processInDisabled() {
@@ -85,7 +85,7 @@ void Controls::doDrive() {
 
     if (toggleRotation) {
         if (!driveAbsRotation) {
-            driveAbsAngle = drive->getPose().Rotation().Radians();
+            driveAbsAngle = drive->getEstimatedPose().Rotation().Radians();
             driveAbsRotation = true;
         }
         else {
@@ -95,12 +95,12 @@ void Controls::doDrive() {
 
     if (resetOdometry) {
         drive->resetOdometry();
-        driveAbsAngle = drive->getPose().Rotation().Radians();
+        driveAbsAngle = drive->getEstimatedPose().Rotation().Radians();
     }
 
     if (calIMU) {
         drive->calibrateIMU();
-        driveAbsAngle = drive->getPose().Rotation().Radians();
+        driveAbsAngle = drive->getEstimatedPose().Rotation().Radians();
     }
 
     double finalXVel = 0.0,

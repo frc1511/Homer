@@ -159,7 +159,7 @@ void Drive::manualControlRelRotation(double xPct, double yPct, double angPct, un
 }
 
 void Drive::manualControlAbsRotation(double xPct, double yPct, units::radian_t angle, unsigned flags) {
-    units::radian_t currAngle = getPose().Rotation().Radians();
+    units::radian_t currAngle = getEstimatedPose().Rotation().Radians();
 
     // Reset the PID controller.
     static bool firstRun = true;
@@ -231,11 +231,15 @@ void Drive::resetOdometry(frc::Pose2d pose) {
      * Resets the position and rotation of the robot to a given pose
      * while ofsetting for the IMU's recorded rotation.
      */
-    odometry.ResetPosition(pose, getRotation(), getModulePositions());
+    poseEstimator.ResetPosition(pose, getRotation(), getModulePositions());
+
+    for (SwerveModule* module : swerveModules) {
+        module->resetDrivePosition();
+    }
 }
 
-frc::Pose2d Drive::getPose() {
-    return odometry.GetPose();
+frc::Pose2d Drive::getEstimatedPose() {
+    return poseEstimator.GetEstimatedPosition();
 }
 
 frc::Rotation2d Drive::getRotation() {
@@ -251,12 +255,12 @@ void Drive::reloadRecordedTrajectory() {
 
 void Drive::updateOdometry() {
     /**
-     * Using the rotation of the robot and the position (position
+     * Using the rotation of the robot and the state (position
      * and rotation) of each swerve module, the odometry class is
      * able to calculate the robot's approximate position and
      * rotation on the field.
      */
-    odometry.Update(getRotation(), getModulePositions());
+    poseEstimator.Update(getRotation(), getModuleStates(), getModulePositions());
 }
 
 void Drive::execStopped() {
@@ -264,7 +268,7 @@ void Drive::execStopped() {
     setModuleStates({ 0_mps, 0_mps, 0_deg_per_s });
 
     // Just for feedback.
-    targetPose = getPose();
+    targetPose = getEstimatedPose();
 
     // Put the drivetrain into brick mode if the flag is set.
     if (manualData.flags & ControlFlag::BRICK) {
@@ -302,7 +306,7 @@ void Drive::execManual() {
     // Adjust the angular velocity using the configured acceleration and deceleration limits.
     angVel = turnRateLimiter.Calculate(angVel);
 
-    frc::Pose2d currPose(getPose());
+    frc::Pose2d currPose(getEstimatedPose());
 
     /**
      * Vice grip allows for the robot to remain aligned with a vision target and ignore
@@ -423,7 +427,7 @@ void Drive::execTrajectory() {
     state.rotation = state.rotation.Degrees() - 90_deg;
 
     // The current pose of the robot.
-    frc::Pose2d currentPose(getPose());
+    frc::Pose2d currentPose(getEstimatedPose());
 
     // The desired position delta of the robot.
     units::meter_t dx(state.xPos - currentPose.X()),
@@ -466,7 +470,7 @@ void Drive::execTrajectory() {
 
 void Drive::record_state() {
     units::second_t currTime(teleopTimer.Get());
-    frc::Pose2d currPose(getPose());
+    frc::Pose2d currPose(getEstimatedPose());
 
     // Add the state to the trajectory recorder.
     trajectoryRecorder.addState(
@@ -595,6 +599,11 @@ void Drive::setModuleStates(frc::ChassisSpeeds speeds) {
     }
 }
 
+wpi::array<frc::SwerveModuleState, 4> Drive::getModuleStates() {
+    return { swerveModules.at(0)->getState(), swerveModules.at(1)->getState(),
+             swerveModules.at(2)->getState(), swerveModules.at(3)->getState() };
+}
+
 wpi::array<frc::SwerveModulePosition, 4> Drive::getModulePositions() {
     return { swerveModules.at(0)->getPosition(), swerveModules.at(1)->getPosition(),
              swerveModules.at(2)->getPosition(), swerveModules.at(3)->getPosition() };
@@ -606,7 +615,7 @@ void Drive::sendFeedback() {
         swerveModules.at(i)->sendFeedback(i);
     }
 
-    frc::Pose2d pose(getPose());
+    frc::Pose2d pose(getEstimatedPose());
 
     // Drive feedback.
     Feedback::sendDouble("Drive", "x position (m)", pose.X().value());
