@@ -3,8 +3,8 @@
 // The file which magnetic encoder offsets are stored on the RoboRIO.
 #define ENCODER_OFFSETS_PATH "/home/lvuser/magnetic_encoder_offsets.txt"
 
-Drive::Drive(Limelight* limelight)
-: limelight(limelight), driveController(
+Drive::Drive(Limelight* limelight, RollingRaspberry* rollingRaspberry)
+: limelight(limelight), rollingRaspberry(rollingRaspberry), driveController(
     [&]() -> frc::HolonomicDriveController {
         // Set the angular PID controller range from -180 to 180 degrees.
         trajectoryThetaPIDController.EnableContinuousInput(units::radian_t(-180_deg), units::radian_t(180_deg));

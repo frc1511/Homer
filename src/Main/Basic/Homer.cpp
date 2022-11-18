@@ -6,14 +6,13 @@ using namespace frc;
 void Homer::RobotInit() { }
 
 void Homer::RobotPeriodic() {
-#ifndef TEST_BOARD
-    blinkyBlinky.process();
-#endif
     for (Mechanism* mech : allMechanisms) {
         mech->sendFeedback();
     }
 
-    camera.process();
+    for (Mechanism* mech : universalMechanisms) {
+        mech->process();
+    }
 }
 
 void Homer::AutonomousInit() {

@@ -4,6 +4,7 @@
 #include <Hardware/HardwareManager.h>
 #include <Drive/SwerveModule.h>
 #include <Vision/Limelight.h>
+#include <RollingRaspberry/RollingRaspberry.h>
 #include <Trajectory/Trajectory.h>
 #include <Trajectory/TrajectoryRecorder.h>
 #include <Basic/Feedback.h>
@@ -83,7 +84,7 @@
 
 class Drive : public Mechanism {
 public:
-    Drive(Limelight* limelight);
+    Drive(Limelight* limelight, RollingRaspberry* rollingRaspberry);
     ~Drive();
 
     void process() override;
@@ -237,6 +238,9 @@ private:
 
     // Vision camera.
     Limelight* limelight;
+
+    // Raspberry Pi
+    RollingRaspberry* rollingRaspberry;
 
     // The IMU that keeps track of the robot's rotation.
     HardwareManager::DriveIMU imu;

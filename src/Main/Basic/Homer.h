@@ -6,6 +6,7 @@
 #include <Control/Controls.h>
 #include <Vision/Limelight.h>
 #include <Vision/Camera.h>
+#include <RollingRaspberry/RollingRaspberry.h>
 #include <Drive/Drive.h>
 #include <Illumination/BlinkyBlinky.h>
 #include <Autonomous/Autonomous.h>
@@ -33,10 +34,10 @@ public:
 private:
     void reset(Mechanism::MatchMode mode);
 
+    RollingRaspberry rollingRaspberry;
     Limelight limelight;
-    Camera camera;
     
-    Drive drive { &limelight };
+    Drive drive { &limelight, &rollingRaspberry };
     Autonomous autonomous { &drive };
 
 #ifndef TEST_BOARD
@@ -50,11 +51,16 @@ private:
     };
 
     std::vector<Mechanism*> allMechanisms {
-        &drive, &controls, &autonomous,
+        &drive, &controls, &autonomous, &limelight, &rollingRaspberry,
 #ifndef TEST_BOARD
         &blinkyBlinky,
 #endif
-        &limelight,
-        &camera,
+    };
+
+    std::vector<Mechanism*> universalMechanisms {
+        &limelight, &rollingRaspberry,
+#ifndef TEST_BOARD
+        &blinkyBlinky,
+#endif
     };
 };
