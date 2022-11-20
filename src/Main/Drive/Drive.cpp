@@ -1,7 +1,7 @@
 #include <Drive/Drive.h>
 
 // The file which magnetic encoder offsets are stored on the RoboRIO.
-#define ENCODER_OFFSETS_PATH "/home/lvuser/magnetic_encoder_offsets.txt"
+#define ENCODER_OFFSETS_PATH std::filesystem::path("/home/lvuser/magnetic_encoder_offsets.txt")
 
 Drive::Drive(Limelight* limelight, RollingRaspberry* rollingRaspberry)
 : limelight(limelight), rollingRaspberry(rollingRaspberry), driveController(
@@ -429,7 +429,7 @@ void Drive::execTrajectory() {
     // The current pose of the robot.
     frc::Pose2d currentPose(getEstimatedPose());
 
-    // The desired position delta of the robot.
+    // The desired component changes in position.
     units::meter_t dx(state.xPos - currentPose.X()),
                    dy(state.yPos - currentPose.Y());
 
@@ -529,7 +529,7 @@ bool Drive::readOffsetsFile() {
     
     // Make sure the file exists.
     if (!file) {
-        std::cout << "Failed to Open Encoder Offsets File '" << ENCODER_OFFSETS_PATH << "'\n";
+        std::cout << "Failed to Open Encoder Offsets File " << ENCODER_OFFSETS_PATH << "\n";
         return false;
     }
 

@@ -36,6 +36,7 @@
 #include <fstream>
 #include <map>
 #include <algorithm>
+#include <filesystem>
 
 // The width of the robot.
 #define ROBOT_WIDTH 0.362_m
@@ -67,10 +68,10 @@
 #define DRIVE_MANUAL_MAX_ANG_DECEL -6.28_rad_per_s_sq
 
 // The path where the recorded trajectory is stored.
-#define RECORDED_TRAJ_PATH "/home/lvuser/recorded_trajectory.csv"
+#define RECORDED_TRAJ_PATH std::filesystem::path("/home/lvuser/recorded_trajectory.csv")
 
 // The path where the motion profile is stored.
-#define MOTION_PROFILE_PATH "/home/lvuser/trajectory_motion.csv"
+#define MOTION_PROFILE_PATH std::filesystem::path("/home/lvuser/trajectory_motion.csv")
 
 // Drivetrain X and Y PID values.
 #define DRIVE_XY_P 0.4
@@ -292,7 +293,7 @@ private:
      * 
      * NOTE: (Waiting for WPILib update to add deceleration)
      */
-    frc::SlewRateLimiter<units::meters_per_second> driveRateLimiter { DRIVE_MANUAL_MAX_ACCEL }; // , DRIVE_MANUAL_MAX_DECEL };
+    frc::SlewRateLimiter<units::meters_per_second> driveRateLimiter { DRIVE_MANUAL_MAX_ACCEL, DRIVE_MANUAL_MAX_DECEL };
 
     /**
      * The slew rate limiter to control angular acceleration and
@@ -300,7 +301,7 @@ private:
      * 
      * NOTE: (Waiting for WPILib update to add deceleration)
      */
-    frc::SlewRateLimiter<units::radians_per_second> turnRateLimiter { DRIVE_MANUAL_MAX_ANG_ACCEL }; // , DRIVE_MANUAL_MAX_ANG_DECEL };
+    frc::SlewRateLimiter<units::radians_per_second> turnRateLimiter { DRIVE_MANUAL_MAX_ANG_ACCEL, DRIVE_MANUAL_MAX_ANG_DECEL };
 
     enum class DriveMode {
         STOPPED,

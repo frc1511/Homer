@@ -12,7 +12,7 @@ void TrajectoryRecorder::clear() {
     lastStateIt = states.cend();
 }
 
-void TrajectoryRecorder::writeToCSV(const char* path) {
+void TrajectoryRecorder::writeToCSV(std::filesystem::path path) {
     std::ofstream file(path);
     file.clear();
 
@@ -26,8 +26,6 @@ void TrajectoryRecorder::writeToCSV(const char* path) {
         << state.rotation.Radians().value() << ','
         << "0\n";
     }
-
-    std::cout << "recorded to csv\n";
 }
 
 void TrajectoryRecorder::addState(units::second_t dt, frc::Pose2d pose) {
@@ -41,17 +39,15 @@ void TrajectoryRecorder::addState(units::second_t dt, frc::Pose2d pose) {
 
         time += lastState.first;
 
-        // The distance component deltas.
+        // The component changes in position.
         units::meter_t dx(pose.X() - lastState.second.xPos),
                        dy(pose.Y() - lastState.second.yPos);
 
-        // The distance delta.
+        // The change in position.
         units::meter_t dd(units::math::hypot(dx, dy));
 
         // The velocity (d/t).
         vel = dd / dt;
-
-        std::cout << "last time " << lastState.first.value() << " last dist " << dd.value() << '\n';
     }
 
     lastStateIt = states.emplace_hint(states.cend(),

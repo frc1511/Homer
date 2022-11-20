@@ -9,6 +9,7 @@
 #include <units/velocity.h>
 #include <map>
 #include <algorithm>
+#include <filesystem>
 
 /**
  * Call it AutoForPeter :D
@@ -26,7 +27,7 @@ public:
     /**
      * Outputs the current trajectory to a CSV file on the RoboRIO.
      */
-    void writeToCSV(const char* path);
+    void writeToCSV(std::filesystem::path path);
 
     /**
      * Adds a state to the current trajectory being recorded.

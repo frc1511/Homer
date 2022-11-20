@@ -2,13 +2,13 @@
 #include <fstream>
 #include <iostream>
 
-Trajectory::Trajectory(const char* path) {
+Trajectory::Trajectory(std::filesystem::path path) {
     std::string file_str;
     {
         // Open the CSV file.
         std::ifstream file(path);
         if (!file) {
-            std::cout << "Failed to Open Trajectory CSV File '" << path << "'\n";
+            std::cout << "Failed to Open Trajectory CSV File " << path << "\n";
         }
         file_str = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     }

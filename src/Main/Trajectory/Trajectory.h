@@ -9,6 +9,7 @@
 #include <map>
 #include <numbers>
 #include <cstdint>
+#include <filesystem>
 
 /**
  * Represents a ThunderAuto trajectory for the robot to follow.
@@ -31,7 +32,7 @@ public:
         frc::Rotation2d rotation;
     };
 
-    Trajectory(const char* path);
+    Trajectory(std::filesystem::path path);
     ~Trajectory();
 
     /**
