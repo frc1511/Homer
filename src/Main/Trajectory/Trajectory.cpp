@@ -8,7 +8,7 @@ Trajectory::Trajectory(const char* path) {
         // Open the CSV file.
         std::ifstream file(path);
         if (!file) {
-            std::cout << "File not opened\n";
+            std::cout << "Failed to Open Trajectory CSV File '" << path << "'\n";
         }
         file_str = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     }

@@ -17,6 +17,7 @@
   "C_Cpp.default.configurationProvider": "vscode-wpilib",
   "files.associations": {
     "stdexcept": "cpp",
-    "array": "cpp"
+    "array": "cpp",
+    "*.inc": "cpp"
   }
 }

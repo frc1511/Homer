@@ -278,8 +278,8 @@ private:
      */
     frc::SwerveDrivePoseEstimator<4> poseEstimator {
         frc::Rotation2d(),
-        frc::Pose2d(),
         getModulePositions(),
+        frc::Pose2d(),
         kinematics,
         { 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 }, // Standard deviations of model states.
         { 0.05, 0.05, 0.05, 0.05, 0.05 }, // Standard deviations of the encoder and gyro measurements.

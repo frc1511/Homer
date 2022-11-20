@@ -231,7 +231,7 @@ void Drive::resetOdometry(frc::Pose2d pose) {
      * Resets the position and rotation of the robot to a given pose
      * while ofsetting for the IMU's recorded rotation.
      */
-    poseEstimator.ResetPosition(pose, getRotation(), getModulePositions());
+    poseEstimator.ResetPosition(getRotation(), getModulePositions(), pose);
 
     for (SwerveModule* module : swerveModules) {
         module->resetDrivePosition();
@@ -504,14 +504,6 @@ void Drive::makeBrick() {
 }
 
 void Drive::configMagneticEncoders() {
-    /**
-     * Only allow configuration in crater mode because configuring them
-     * accidentally would be D:
-     */
-    if (!settings.isCraterMode) {
-        return;
-    }
-
     for (std::size_t i = 0; i < swerveModules.size(); i++) {
         /**
          * Get the current rotation of the swerve modules to save as the
@@ -537,6 +529,7 @@ bool Drive::readOffsetsFile() {
     
     // Make sure the file exists.
     if (!file) {
+        std::cout << "Failed to Open Encoder Offsets File '" << ENCODER_OFFSETS_PATH << "'\n";
         return false;
     }
 
@@ -560,7 +553,7 @@ bool Drive::readOffsetsFile() {
 void Drive::writeOffsetsFile() {
     // Open the file (Will create a new file if it does not already exist).
     std::ofstream offsetsFile(ENCODER_OFFSETS_PATH);
-    
+
     // Clear the contents of the file.
     offsetsFile.clear();
 
