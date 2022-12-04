@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Wrappers/GameController/GameController.h>
 #include <Wrappers/GameController/PS4Controller.h>
 #include <Wrappers/GameController/XboxController.h>
 

@@ -7,6 +7,7 @@
 #include <Illumination/BlinkyBlinky.h>
 #include <Vision/Limelight.h>
 #include <numbers>
+#include <frc/GenericHID.h>
 
 class Controls : public Mechanism {
 public:
@@ -21,9 +22,9 @@ public:
     bool getShouldPersistConfig();
     
 private:
-    ThunderGameController driveController {0};
-    ThunderGameController auxController {1};
-    ThunderGameController switchPanel {2};
+    frc::GenericHID driveController {0};
+    frc::GenericHID auxController {1};
+    frc::GenericHID switchPanel {2};
 
     void doDrive();
     void doAux();

@@ -23,9 +23,9 @@ void Controls::processInDisabled() {
 
     using DriveButton = HardwareManager::DriveGameController::Button;
 
-    bool toggleCamera = driveController.getButtonPressed(DriveButton::SQUARE);
-    bool resetOdometry = driveController.getButtonPressed(DriveButton::OPTIONS);
-    bool calIMU = driveController.getButtonPressed(DriveButton::SHARE);
+    bool toggleCamera = driveController.GetRawButtonPressed(DriveButton::SQUARE);
+    bool resetOdometry = driveController.GetRawButtonPressed(DriveButton::OPTIONS);
+    bool calIMU = driveController.GetRawButtonPressed(DriveButton::SHARE);
 
     if (toggleCamera) {
         whichCamera = !whichCamera;
@@ -44,20 +44,20 @@ void Controls::doDrive() {
     using DriveButton = HardwareManager::DriveGameController::Button;
     using DriveAxis = HardwareManager::DriveGameController::Axis;
 
-    bool brickDrive = driveController.getButton(DriveButton::CROSS);
-    bool viceGrip = driveController.getButton(DriveButton::CIRCLE);
-    bool toggleCamera = driveController.getButtonPressed(DriveButton::SQUARE);
-    bool toggleRotation = driveController.getButtonPressed(DriveButton::TRIANGLE);
+    bool brickDrive = driveController.GetRawButton(DriveButton::CROSS);
+    bool viceGrip = driveController.GetRawButton(DriveButton::CIRCLE);
+    bool toggleCamera = driveController.GetRawButtonPressed(DriveButton::SQUARE);
+    bool toggleRotation = driveController.GetRawButtonPressed(DriveButton::TRIANGLE);
 
-    double xVel = driveController.getAxis(DriveAxis::LEFT_X);
-    double yVel = driveController.getAxis(DriveAxis::LEFT_Y);
-    double angVel = driveController.getAxis(DriveAxis::RIGHT_X);
+    double xVel = driveController.GetRawAxis(DriveAxis::LEFT_X);
+    double yVel = driveController.GetRawAxis(DriveAxis::LEFT_Y);
+    double angVel = driveController.GetRawAxis(DriveAxis::RIGHT_X);
 
-    double xAng = driveController.getAxis(DriveAxis::RIGHT_X);
-    double yAng = driveController.getAxis(DriveAxis::RIGHT_Y);
+    double xAng = driveController.GetRawAxis(DriveAxis::RIGHT_X);
+    double yAng = driveController.GetRawAxis(DriveAxis::RIGHT_Y);
 
-    bool resetOdometry = driveController.getButtonPressed(DriveButton::OPTIONS);
-    bool calIMU = driveController.getButtonPressed(DriveButton::SHARE);
+    bool resetOdometry = driveController.GetRawButtonPressed(DriveButton::OPTIONS);
+    bool calIMU = driveController.GetRawButtonPressed(DriveButton::SHARE);
 
     bool wasBrickDrive = driveCtrlFlags & Drive::ControlFlag::BRICK;
     
@@ -163,8 +163,8 @@ bool Controls::getShouldPersistConfig() {
     using AuxButton = HardwareManager::AuxGameController::Button;
 
     return settings.isCraterMode
-        && driveController.getButton(DriveButton::TRIANGLE) && driveController.getDPad() == 180
-        && auxController.getButton(AuxButton::CROSS) && auxController.getDPad() == 0;
+        && driveController.GetRawButton(DriveButton::TRIANGLE) && driveController.GetPOV() == 180
+        && auxController.GetRawButton(AuxButton::CROSS) && auxController.GetPOV() == 0;
 }
 
 void Controls::doAux() {
@@ -175,12 +175,12 @@ void Controls::doAux() {
 }
 
 void Controls::doSwitchPanel() {
-    settings.isCraterMode = switchPanel.getButton(1);
-    driveRobotCentric = switchPanel.getButton(2);
-    driveRecording = switchPanel.getButton(3);
+    settings.isCraterMode = switchPanel.GetRawButton(1);
+    driveRobotCentric = switchPanel.GetRawButton(2);
+    driveRecording = switchPanel.GetRawButton(3);
 
     // Only turn on limelight when broken switch is on or the drivetrain is vice gripping.
-    if (switchPanel.getButton(5) || driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) {
+    if (switchPanel.GetRawButton(5) || driveCtrlFlags & Drive::ControlFlag::VICE_GRIP) {
         limelight->setLEDMode(Limelight::LEDMode::ON);
         limelight->setCameraMode(Limelight::CameraMode::VISION_PROCESS);
     }
@@ -192,7 +192,7 @@ void Controls::doSwitchPanel() {
     if (blinkyBlinky) {
         int mode = Feedback::getDouble("LED", "Mode", 0.0);
 
-        if (switchPanel.getButton(4) || mode == 3) {
+        if (switchPanel.GetRawButton(4) || mode == 3) {
             blinkyBlinky->setLEDMode(BlinkyBlinky::LEDMode::OFF);
         }
         else if (mode == 0) {
