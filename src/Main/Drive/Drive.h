@@ -278,12 +278,11 @@ private:
      * field during the match.
      */
     frc::SwerveDrivePoseEstimator<4> poseEstimator {
+        kinematics,
         frc::Rotation2d(),
         getModulePositions(),
         frc::Pose2d(),
-        kinematics,
-        { 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 }, // Standard deviations of model states.
-        { 0.05, 0.05, 0.05, 0.05, 0.05 }, // Standard deviations of the encoder and gyro measurements.
+        { 0.1, 0.1, 0.1 }, // Standard deviations of model states.
         { 0.1, 0.1, 0.1 } // Standard deviations of the vision measurements.
     };
 

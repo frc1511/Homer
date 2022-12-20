@@ -260,7 +260,7 @@ void Drive::updateOdometry() {
      * able to calculate the robot's approximate position and
      * rotation on the field.
      */
-    poseEstimator.Update(getRotation(), getModuleStates(), getModulePositions());
+    poseEstimator.Update(getRotation(), getModulePositions());
 }
 
 void Drive::execStopped() {

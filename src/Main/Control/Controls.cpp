@@ -111,8 +111,7 @@ void Controls::doDrive() {
 
     // Improves the joystick axis to be smoother and easier to control.
     auto improveAxis = [](double axis) -> double {
-        return axis;
-        //return std::sin(axis * (wpi::numbers::pi / 2.0));
+        return std::sin(axis * (std::numbers::pi / 2.0));
     };
 
     if (std::fabs(xVel) > AXIS_DEADZONE) {
