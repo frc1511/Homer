@@ -1,55 +1,27 @@
 #include <Trajectory/Trajectory.h>
-#include <fstream>
-#include <iostream>
+#include <Util/Parser.h>
 
 Trajectory::Trajectory(std::filesystem::path path) {
-    std::string file_str;
-    {
-        // Open the CSV file.
-        std::ifstream file(path);
-        if (!file) {
-            std::cout << "Failed to Open Trajectory CSV File " << path << "\n";
-        }
-        file_str = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-    }
-
-    std::string::const_iterator file_iter = file_str.cbegin();
+    std::string fileStr = Parser::getFile(path);
+    Parser::Iter currIter = fileStr.cbegin();
 
     // Skip the CSV header.
-    while (*file_iter != '\n') ++file_iter;
-    ++file_iter;
-
-    // Count the number of characters until the next newline or comma.
-    auto count = [&]() -> std::ptrdiff_t {
-        std::ptrdiff_t n = 0;
-        while (file_iter != file_str.end() && *file_iter != '\n' && *file_iter != ',') {
-            n++;
-            file_iter++;
-        }
-        return n;
-    };
-
-    // Read a number from the file.
-    auto get_num = [&]() -> double {
-        // Save the starting position.
-        std::string::const_iterator start = file_iter;
-        // Count the number of characters.
-        std::size_t n = count();
-        // Read the string as a double.
-        return std::stod(std::string(start, start + n));
-    };
+    Parser::parseUntil(currIter, fileStr.cend(), "\n");
+    ++currIter;
 
     // Read each line of the file.
-    while (file_iter != file_str.cend()) {
-        units::second_t time(get_num()); ++file_iter;
-        units::meter_t xPos(get_num()); ++file_iter;
-        units::meter_t yPos(get_num()); ++file_iter;
-        units::meters_per_second_t velocity(get_num()); ++file_iter;
-        frc::Rotation2d rotation = units::radian_t(get_num()); ++file_iter;
-        u_int32_t action = static_cast<u_int32_t>(get_num()); ++file_iter;
+    while (currIter != fileStr.cend()) {
+        units::second_t time(Parser::parseNumber(currIter, fileStr.cend())); ++currIter;
+        units::meter_t xPos(Parser::parseNumber(currIter, fileStr.cend())); ++currIter;
+        units::meter_t yPos(Parser::parseNumber(currIter, fileStr.cend())); ++currIter;
+        units::meters_per_second_t velocity(Parser::parseNumber(currIter, fileStr.cend())); ++currIter;
+        frc::Rotation2d rotation = units::radian_t(Parser::parseNumber(currIter, fileStr.cend())); ++currIter;
+        u_int32_t action = static_cast<u_int32_t>(Parser::parseNumber(currIter, fileStr.cend())); ++currIter;
+
+        frc::Pose2d pose(xPos, yPos, rotation);
 
         // Add the point to the trajectory.
-        states.emplace(time, State{ xPos, yPos, velocity, rotation });
+        states.emplace(time, State{ pose, velocity });
         
         if (action) {
           actions.emplace(time, action);
@@ -68,7 +40,7 @@ Trajectory::State Trajectory::sample(units::second_t time) const {
 
     // No defined states D:
     if (noUpper && noLower) {
-        return State{ 0_m, 0_m, 0_mps, frc::Rotation2d(0_deg) };
+        return State{ frc::Pose2d(), 0_mps };
     }
     // Return the highest defined state if there is no upper bound.
     else if (noUpper) {
@@ -91,18 +63,12 @@ Trajectory::State Trajectory::sample(units::second_t time) const {
         return upperState;
     }
 
-    // Linear interpolation of all the values.
+    // Linear interpolation.
+    double t = (time.value() - lowerTime.value()) / (upperTime.value() - lowerTime.value());
+    frc::Pose2d pose = lowerState.pose.Exp(lowerState.pose.Log(upperState.pose) * t);
+    units::meters_per_second_t velocity = ((upperState.velocity - lowerState.velocity) * t) + lowerState.velocity;
 
-    double t((time.value() - lowerTime.value()) / (upperTime.value() - lowerTime.value()));
-
-    units::meter_t xPos(((upperState.xPos - lowerState.xPos) * t) + lowerState.xPos),
-                   yPos(((upperState.yPos - lowerState.yPos) * t) + lowerState.yPos);
-
-    units::meters_per_second_t velocity(((upperState.velocity - lowerState.velocity) * t) + lowerState.velocity);
-
-    frc::Rotation2d rotation(((upperState.rotation.Radians() - lowerState.rotation.Radians()) * t) + lowerState.rotation.Radians());
-
-    return State{ xPos, yPos, velocity, rotation };
+    return State{ pose, velocity };
 }
 
 units::second_t Trajectory::getDuration() const {
@@ -113,5 +79,5 @@ units::second_t Trajectory::getDuration() const {
 frc::Pose2d Trajectory::getInitialPose() const {
     const State& state(states.cbegin()->second);
 
-    return frc::Pose2d(state.xPos, state.yPos, state.rotation);
+    return state.pose;
 }

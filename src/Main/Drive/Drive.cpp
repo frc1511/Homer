@@ -255,12 +255,19 @@ void Drive::reloadRecordedTrajectory() {
 
 void Drive::updateOdometry() {
     /**
-     * Using the rotation of the robot and the state (position
-     * and rotation) of each swerve module, the odometry class is
-     * able to calculate the robot's approximate position and
-     * rotation on the field.
+     * Update the pose estimator with encoder measurements from
+     * the swerve modules.
      */
     poseEstimator.Update(getRotation(), getModulePositions());
+
+    /**
+     * Update the pose estimator with the estimated poses from
+     * RollingRaspberry.
+     */
+    std::vector<frc::Pose2d> estimatedPoses = rollingRaspberry->getEstimatedRobotPoses();
+    for (const frc::Pose2d& pose : estimatedPoses) {
+        poseEstimator.AddVisionMeasurement(pose, frc::Timer::GetFPGATimestamp());
+    }
 }
 
 void Drive::execStopped() {
@@ -424,17 +431,16 @@ void Drive::execTrajectory() {
     }
 
     // Adjust the rotation because everything about this robot is 90 degrees off D:
-    state.rotation = state.rotation.Degrees() - 90_deg;
+    state.pose = frc::Pose2d(state.pose.Translation(), state.pose.Rotation() - 90_deg);
 
     // The current pose of the robot.
     frc::Pose2d currentPose(getEstimatedPose());
 
-    // The desired component changes in position.
-    units::meter_t dx(state.xPos - currentPose.X()),
-                   dy(state.yPos - currentPose.Y());
+    // The desired change in position.
+    frc::Twist2d twist(currentPose.Log(state.pose));
 
     // The angle at which the robot should be driving at.
-    frc::Rotation2d heading(units::math::atan2(dy, dx));
+    frc::Rotation2d heading(units::math::atan2(twist.dy, twist.dx));
 
     /**
      * Calculate the chassis velocities based on the error between the current
@@ -443,14 +449,14 @@ void Drive::execTrajectory() {
     frc::ChassisSpeeds velocities(
         driveController.Calculate(
             currentPose,
-            frc::Pose2d(state.xPos, state.yPos, heading),
+            frc::Pose2d(state.pose.X(), state.pose.Y(), heading),
             state.velocity,
-            state.rotation
+            state.pose.Rotation()
         )
     );
 
     // Keep target pose for feedback.
-    targetPose = frc::Pose2d(state.xPos, state.yPos, state.rotation);
+    targetPose = state.pose;
 
     // Log motion to CSV file for debugging.
     trajectoryMotionFile << time.value() << ','
@@ -462,7 +468,7 @@ void Drive::execTrajectory() {
                          << velocities.vy.value() << ','
                          << velocities.omega.value() << ','
                          << currentPose.Rotation().Radians().value() << ','
-                         << state.rotation.Radians().value() << '\n';
+                         << targetPose.Rotation().Radians().value() << '\n';
 
     // Make the robot go vroom :D
     setModuleStates(velocities);

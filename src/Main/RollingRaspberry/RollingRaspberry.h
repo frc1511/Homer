@@ -7,9 +7,7 @@
 #include <networktables/NetworkTable.h>
 #include <networktables/NetworkTableInstance.h>
 #include <frc/geometry/Pose2d.h>
-#include <optional>
-
-#define ROLLING_RASP_NT_NAME "RollingRaspberry"
+#include <vector>
 
 /**
  * Represents the Raspberry Pi Co-Processor on the Robot.
@@ -26,14 +24,10 @@ public:
     bool isConnected();
 
     /**
-     * Returns the estimated position of the robot calculated by the Raspberry
+     * Returns the estimated poses of the robot calculated by the Raspberry
      * Pi's vision processing pipeline.
-     * 
-     * Will return std::nullopt when the vision processing pipeline fails to
-     * identify any targets, or when the raspberry pi is disconnected/not
-     * running.
-    */
-    std::optional<frc::Pose2d> getEstimatedRobotPosition();
+     */
+    std::vector<frc::Pose2d> getEstimatedRobotPoses();
 
 private:
     // A network table used to communicate with the r-pi.

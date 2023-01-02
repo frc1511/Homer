@@ -5,6 +5,7 @@
 #include <units/velocity.h>
 #include <frc/geometry/Rotation2d.h>
 #include <frc/geometry/Pose2d.h>
+#include <frc/geometry/Twist2d.h>
 #include <units/math.h>
 #include <map>
 #include <numbers>
@@ -20,16 +21,11 @@ public:
      * Represents a single point in a trajectory.
      */
     struct State {
-        // The target x position of the robot.
-        units::meter_t xPos;
-        // The target y position of the robot.
-        units::meter_t yPos;
+        // The target pose of the robot.
+        frc::Pose2d pose;
 
         // The target velocity of the robot.
         units::meters_per_second_t velocity;
-
-        // The target rotation of the robot.
-        frc::Rotation2d rotation;
     };
 
     Trajectory(std::filesystem::path path);

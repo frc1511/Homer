@@ -3,6 +3,7 @@
 #include <Trajectory/Trajectory.h>
 #include <frc/geometry/Rotation2d.h>
 #include <frc/geometry/Pose2d.h>
+#include <frc/geometry/Twist2d.h>
 #include <units/angle.h>
 #include <units/length.h>
 #include <units/time.h>

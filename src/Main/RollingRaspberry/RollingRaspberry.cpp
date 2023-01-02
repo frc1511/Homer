@@ -1,4 +1,7 @@
 #include <RollingRaspberry/RollingRaspberry.h>
+#include <Util/Parser.h>
+
+#define ROLLING_RASP_NT_NAME "RollingRaspberry"
 
 RollingRaspberry::RollingRaspberry()
 : table(nt::NetworkTableInstance::GetDefault().GetTable(ROLLING_RASP_NT_NAME)) { }
@@ -9,15 +12,19 @@ bool RollingRaspberry::isConnected() {
     return table->GetBoolean("IsRunning", false);
 }
 
-std::optional<frc::Pose2d> RollingRaspberry::getEstimatedRobotPosition() {
-    if (table->GetBoolean("HasPose", false)) {
-        units::meter_t x = units::meter_t(table->GetNumber("RobotXPosition", 0.0));
-        units::meter_t y = units::meter_t(table->GetNumber("RobotYPosition", 0.0));
-        units::radian_t rot = units::radian_t(table->GetNumber("RobotRotation", 0.0));
+std::vector<frc::Pose2d> RollingRaspberry::getEstimatedRobotPoses() {
+    std::vector<std::string> poseStrs = table->GetStringArray("Poses", {});
 
-        return frc::Pose2d(x, y, rot);
+    std::vector<frc::Pose2d> poses;
+    for (const std::string& poseStr : poseStrs) {
+        Parser::Iter currIt = poseStr.cbegin();
+
+        units::meter_t x(Parser::parseNumber(currIt, poseStr.cend())); ++currIt;
+        units::meter_t y(Parser::parseNumber(currIt, poseStr.cend())); ++currIt;
+        units::radian_t rot(Parser::parseNumber(currIt, poseStr.cend()));
+
+        poses.emplace_back(x, y, rot);
     }
-    else {
-        return std::nullopt;
-    }
+
+    return poses;
 }
