@@ -7,7 +7,9 @@
 #include <networktables/NetworkTable.h>
 #include <networktables/NetworkTableInstance.h>
 #include <frc/geometry/Pose2d.h>
+#include <frc/Timer.h>
 #include <vector>
+#include <units/time.h>
 
 /**
  * Represents the Raspberry Pi Co-Processor on the Robot.
@@ -17,6 +19,8 @@ public:
     RollingRaspberry();
     ~RollingRaspberry();
 
+    void process() override;
+
     /**
      * Returns whether the Raspberry Pi is connected and the robot program is
      * running.
@@ -25,11 +29,18 @@ public:
 
     /**
      * Returns the estimated poses of the robot calculated by the Raspberry
-     * Pi's vision processing pipeline.
+     * Pi's vision processing pipeline paired with a FPGA Timestamp.
      */
-    std::vector<frc::Pose2d> getEstimatedRobotPoses();
+    std::pair<units::second_t, std::vector<frc::Pose2d>> getEstimatedRobotPoses();
 
 private:
     // A network table used to communicate with the r-pi.
     std::shared_ptr<nt::NetworkTable> table;
+
+    bool connected = false;
+
+    units::second_t startRobotTimestamp;
+    units::second_t startPiTimestamp;
+
+    units::second_t lastPiTimestamp;
 };

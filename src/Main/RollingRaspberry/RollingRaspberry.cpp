@@ -8,12 +8,31 @@ RollingRaspberry::RollingRaspberry()
 
 RollingRaspberry::~RollingRaspberry() = default;
 
-bool RollingRaspberry::isConnected() {
-    return table->GetBoolean("IsRunning", false);
+void RollingRaspberry::process() {
+    bool running = table->GetBoolean("IsRunning", false);
+
+    if (!connected && running) {
+        startRobotTimestamp = frc::Timer::GetFPGATimestamp();
+        startPiTimestamp = units::second_t(table->GetNumber("Uptime", 0.0));
+        lastPiTimestamp = startPiTimestamp;
+    }
+     
+    connected = running;
 }
 
-std::vector<frc::Pose2d> RollingRaspberry::getEstimatedRobotPoses() {
+bool RollingRaspberry::isConnected() {
+    return connected;
+}
+
+std::pair<units::second_t, std::vector<frc::Pose2d>> RollingRaspberry::getEstimatedRobotPoses() {
     std::vector<std::string> poseStrs = table->GetStringArray("Poses", {});
+    units::second_t poseTime(table->GetNumber("PoseTime", 0.0));
+
+    if (!connected || poseTime == lastPiTimestamp) {
+        return std::make_pair(0_s, std::vector<frc::Pose2d>());
+    }
+
+    lastPiTimestamp = poseTime;
 
     std::vector<frc::Pose2d> poses;
     for (const std::string& poseStr : poseStrs) {
@@ -26,5 +45,7 @@ std::vector<frc::Pose2d> RollingRaspberry::getEstimatedRobotPoses() {
         poses.emplace_back(x, y, rot);
     }
 
-    return poses;
+    units::second_t timeSinceStart = poseTime - startPiTimestamp;
+
+    return std::make_pair(startRobotTimestamp + timeSinceStart, poses);
 }
