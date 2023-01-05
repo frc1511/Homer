@@ -1,51 +1,66 @@
 #include <RollingRaspberry/RollingRaspberry.h>
 #include <Util/Parser.h>
 
-#define ROLLING_RASP_NT_NAME "RollingRaspberry"
-
 RollingRaspberry::RollingRaspberry()
-: table(nt::NetworkTableInstance::GetDefault().GetTable(ROLLING_RASP_NT_NAME)) { }
+: table(nt::NetworkTableInstance::GetDefault().GetTable("RollingRaspberry")),
+  poseSubscriber(table->GetStringArrayTopic("Poses").Subscribe({})),
+  poseListener(nt::NetworkTableInstance::GetDefault().AddListener(
+    poseSubscriber,
+    nt::EventFlags::kValueAll,
+    [this](const nt::Event& event) {
+        this->poseCallback(event);
+    }
+  )) { }
 
 RollingRaspberry::~RollingRaspberry() = default;
 
 void RollingRaspberry::process() {
     bool running = table->GetBoolean("IsRunning", false);
 
-    if (!connected && running) {
+    if (!init && running) {
         startRobotTimestamp = frc::Timer::GetFPGATimestamp();
         startPiTimestamp = units::second_t(table->GetNumber("Uptime", 0.0));
-        lastPiTimestamp = startPiTimestamp;
+        init = true;
     }
-     
-    connected = running;
 }
 
-bool RollingRaspberry::isConnected() {
-    return connected;
-}
+void RollingRaspberry::poseCallback(const nt::Event& event) {
+    // Shouldn't happen, but the guard is here anyways.
+    if (!init) return;
 
-std::pair<units::second_t, std::vector<frc::Pose2d>> RollingRaspberry::getEstimatedRobotPoses() {
-    std::vector<std::string> poseStrs = table->GetStringArray("Poses", {});
-    units::second_t poseTime(table->GetNumber("PoseTime", 0.0));
+    decltype(poses) newPoses;
+    const auto& poseStrs = event.GetValueEventData()->value.GetStringArray();
 
-    if (!connected || poseTime == lastPiTimestamp) {
-        return std::make_pair(0_s, std::vector<frc::Pose2d>());
-    }
-
-    lastPiTimestamp = poseTime;
-
-    std::vector<frc::Pose2d> poses;
+    // Parse each pose estimation string, format: "timestamp,xPos,yPos,rotation"
     for (const std::string& poseStr : poseStrs) {
         Parser::Iter currIt = poseStr.cbegin();
 
-        units::meter_t x(Parser::parseNumber(currIt, poseStr.cend())); ++currIt;
-        units::meter_t y(Parser::parseNumber(currIt, poseStr.cend())); ++currIt;
-        units::radian_t rot(Parser::parseNumber(currIt, poseStr.cend()));
+        units::second_t timestamp(Parser::parseNumber(currIt, poseStr.cend())); ++currIt;
+        units::meter_t xPos(Parser::parseNumber(currIt, poseStr.cend())); ++currIt;
+        units::meter_t yPos(Parser::parseNumber(currIt, poseStr.cend())); ++currIt;
+        units::radian_t rotation(Parser::parseNumber(currIt, poseStr.cend()));
 
-        poses.emplace_back(x, y, rot);
+        units::second_t timeSinceStart = timestamp - startPiTimestamp;
+        
+        newPoses.emplace(startRobotTimestamp + timeSinceStart, frc::Pose2d(xPos, yPos, rotation));
     }
 
-    units::second_t timeSinceStart = poseTime - startPiTimestamp;
+    // Save the new pose estimations.
+    if (!newPoses.empty()) {
+        std::lock_guard lk(posesMutex);
 
-    return std::make_pair(startRobotTimestamp + timeSinceStart, poses);
+        poses.insert(newPoses.cbegin(), newPoses.cend());
+    }
+}
+
+std::map<units::second_t, frc::Pose2d> RollingRaspberry::getEstimatedRobotPoses() {
+    std::lock_guard lk(posesMutex);
+
+    // Get the current pose estimations.
+    auto currPoses = poses;
+
+    // Clear the pose estimations (don't need them anymore).
+    poses.clear();
+
+    return currPoses;
 }

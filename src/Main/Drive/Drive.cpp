@@ -264,9 +264,9 @@ void Drive::updateOdometry() {
      * Update the pose estimator with the estimated poses from
      * RollingRaspberry.
      */
-    const auto [timestamp, estimatedPoses] = rollingRaspberry->getEstimatedRobotPoses();
+    const auto estimatedPoses = rollingRaspberry->getEstimatedRobotPoses();
 
-    for (const frc::Pose2d& pose : estimatedPoses) {
+    for (const auto& [timestamp, pose] : estimatedPoses) {
         poseEstimator.AddVisionMeasurement(pose, timestamp);
     }
 }
