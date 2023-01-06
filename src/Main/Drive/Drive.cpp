@@ -1,4 +1,8 @@
 #include <Drive/Drive.h>
+#include <frc/geometry/Twist2d.h>
+#include <Util/Parser.h>
+#include <Basic/Feedback.h>
+#include <fmt/core.h>
 
 // The file which magnetic encoder offsets are stored on the RoboRIO.
 #define ENCODER_OFFSETS_PATH std::filesystem::path("/home/lvuser/magnetic_encoder_offsets.txt")
@@ -531,27 +535,15 @@ void Drive::configMagneticEncoders() {
 }
 
 bool Drive::readOffsetsFile() {
-    // Open the file.
-    std::ifstream file(ENCODER_OFFSETS_PATH);
-    
-    // Make sure the file exists.
-    if (!file) {
-        std::cout << "Failed to Open Encoder Offsets File " << ENCODER_OFFSETS_PATH << "\n";
-        return false;
-    }
+    std::string fileStr = Parser::getFile(ENCODER_OFFSETS_PATH);
+    if (fileStr.empty()) exit(1);
 
-    std::size_t i = 0;
+    Parser::Iter currIter = fileStr.cbegin();
+
     std::string line;
-    // Loop through each line of the file.
-    while (getline(file, line) && i <= 3) {
-        // Convert the line string to a number.
-        double num = std::atof(line.c_str());
-        
-        // Set the offset in the array to the parsed number (saved in radians).
-        offsets.at(i) = units::radian_t(num);
-        
-        // Increment the index.
-        ++i;
+    for (int i = 0; i < 4; ++i) {
+        offsets.at(i) = units::radian_t(Parser::parseNumber(currIter, fileStr.cend()));
+        ++currIter;
     }
 
     return true;

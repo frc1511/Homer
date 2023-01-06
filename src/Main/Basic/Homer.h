@@ -12,7 +12,6 @@
 #include <Autonomous/Autonomous.h>
 #include <Hardware/IOMap.h>
 #include <vector>
-#include <iostream>
 
 class Homer : public frc::TimedRobot {
 public:

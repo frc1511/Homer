@@ -36,8 +36,6 @@ static const ColorInterpolation kDisabledInterp(
     LED_ENABLED_NUM_TOTAL
 );
 
-#include <iostream>
-
 BlinkyBlinky::BlinkyBlinky() {
     strip.SetLength(LED_NUM_TOTAL);
     strip.SetData(stripBuffer);
@@ -171,9 +169,6 @@ void BlinkyBlinky::rainbow() {
 }
 
 void BlinkyBlinky::sendFeedback() {
-    // 1 = blue, 0 = red
-    Feedback::sendDouble("thunderdashboard", "alliance", frc::DriverStation::GetAlliance() == frc::DriverStation::kBlue);
-
     const char* modeString = "";
     switch (ledMode) {
         case LEDMode::OFF:

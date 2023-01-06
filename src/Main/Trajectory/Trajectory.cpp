@@ -3,6 +3,8 @@
 
 Trajectory::Trajectory(std::filesystem::path path) {
     std::string fileStr = Parser::getFile(path);
+    if (fileStr.empty()) exit(1);
+
     Parser::Iter currIter = fileStr.cbegin();
 
     // Skip the CSV header.

@@ -7,7 +7,7 @@ std::string Parser::getFile(std::filesystem::path path) {
   std::ifstream file(path);
   if (!file) {
     fmt::print("Error: Could not open file \"{}\" from directory \"{}\"\n", path.string(), std::filesystem::current_path().string());
-    exit(1);
+    return "";
   }
 
   std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());

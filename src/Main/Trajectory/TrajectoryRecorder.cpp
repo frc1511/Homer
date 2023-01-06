@@ -1,6 +1,5 @@
 #include <Trajectory/TrajectoryRecorder.h>
 #include <fstream>
-#include <iostream>
 
 TrajectoryRecorder::TrajectoryRecorder()
 : lastStateIt(states.cend()) { }

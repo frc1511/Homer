@@ -1,5 +1,6 @@
 #include <Basic/Homer.h>
 #include <Basic/Mechanism.h>
+#include <fmt/core.h>
 
 using namespace frc;
 
@@ -43,11 +44,11 @@ void Homer::DisabledPeriodic() {
 
 void Homer::TestInit() {
     if (controls.getShouldPersistConfig()) {
-        puts("*** Persistent configuration activating...");
+        fmt::print("*** Persistent configuration activating...\n");
         for (Mechanism* mech : allMechanisms) {
           mech->doPersistentConfiguration();
         }
-        puts("*** Persistent configuration complete!");
+        fmt::print("*** Persistent configuration complete!\n");
     }
     reset(Mechanism::MatchMode::TEST);
 }
