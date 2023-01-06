@@ -1,6 +1,7 @@
 #include <Util/Parser.h>
 #include <fstream>
 #include <fmt/core.h>
+#include <cmath>
 
 std::string Parser::getFile(std::filesystem::path path) {
   std::ifstream file(path);
@@ -54,20 +55,44 @@ double Parser::parseNumber(Iter& currIter, Iter endIter) {
   }
 
   // Parse the integer part.
-  std::string int_str = parseWhile(currIter, endIter, [](char c) {
+  std::string intStr = parseWhile(currIter, endIter, [](char c) {
     return std::isdigit(c);
   });
   
-  if (currIter == endIter || *currIter != '.') {
-    return std::stoi(int_str) * sign;
+  if (currIter == endIter || (*currIter != '.' && *currIter != 'e' && *currIter != 'E')) {
+    return std::stoi(intStr) * sign;
   }
 
-  // Parse the decimal part.
-  ++currIter;
-  std::string dec_str = parseWhile(currIter, endIter, [](char c) {
-    return std::isdigit(c);
-  });
+  double num = std::stoi(intStr);
 
-  std::string str = int_str + "." + dec_str;
-  return std::stod(str) * sign;
+  // Parse the decimal part.
+  if (*currIter == '.') {
+    ++currIter;
+    std::string decStr = parseWhile(currIter, endIter, [](char c) {
+      return std::isdigit(c);
+    });
+
+    num = std::stod(fmt::format("{}.{}", intStr, ".", decStr)) * sign;
+  }
+
+  // Parse the exponent part.
+  if (*currIter == 'e' || *currIter == 'E') {
+    ++currIter;
+    int expSign = 1;
+    if (*currIter == '-') {
+      expSign = -1;
+      ++currIter;
+    }
+    else if (*currIter == '+') {
+      ++currIter;
+    }
+
+    std::string expStr = parseWhile(currIter, endIter, [](char c) {
+      return std::isdigit(c);
+    });
+
+    num *= std::pow(10, std::stoi(expStr) * expSign);
+  }
+
+  return num;
 }
