@@ -117,7 +117,8 @@ void Drive::resetToMode(MatchMode mode) {
             trajectoryMotionFile.clear();
             
             // Write the header of the CSV file.
-            trajectoryMotionFile << "time,x_pos,y_pos,dest_x_pos,dest_y_pos,vel_x,vel_y,vel_ang,ang,dest_ang\n";
+            trajectoryMotionFile <<
+                "time,x_pos,y_pos,dest_x_pos,dest_y_pos,vel_x,vel_y,vel_ang,ang,dest_ang\n";
         }
 
         // Reset the position and rotation on the field.
@@ -345,8 +346,18 @@ void Drive::execManual() {
         );
     }
 
-    frc::ChassisSpeeds velocities;
+    if (manualData.flags & ControlFlag::LOCK_X) {
+        xVel = 0_mps;
+    }
+    if (manualData.flags & ControlFlag::LOCK_Y) {
+        yVel = 0_mps;
+    }
+    if (manualData.flags & ControlFlag::LOCK_ROT) {
+        angVel = 0_rad_per_s;
+    }
     
+    frc::ChassisSpeeds velocities;
+
     // Generate chassis speeds depending on the control mode.
     if (manualData.flags & ControlFlag::FIELD_CENTRIC) {
         // Generate chassis speeds based on the rotation of the robot relative to the field.

@@ -32,6 +32,8 @@ private:
 
     bool whichCamera = false;
 
+    bool driveLockX = false;
+
     bool driveRobotCentric = false;
     unsigned driveCtrlFlags = Drive::ControlFlag::NONE;
 

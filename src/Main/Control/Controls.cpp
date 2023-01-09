@@ -58,6 +58,9 @@ void Controls::doDrive() {
 
     bool resetOdometry = driveController.GetRawButtonPressed(DriveButton::OPTIONS);
     bool calIMU = driveController.GetRawButtonPressed(DriveButton::SHARE);
+    if (driveController.GetRawButtonPressed(DriveButton::LEFT_STICK)) {
+        driveLockX = !driveLockX;
+    }
 
     bool wasBrickDrive = driveCtrlFlags & Drive::ControlFlag::BRICK;
     
@@ -77,6 +80,10 @@ void Controls::doDrive() {
 
     if (driveRecording) {
         driveCtrlFlags |= Drive::ControlFlag::RECORDING;
+    }
+
+    if (driveLockX) {
+        driveCtrlFlags |= Drive::ControlFlag::LOCK_X;
     }
 
     if (toggleCamera) {
@@ -143,7 +150,9 @@ void Controls::doDrive() {
 
     // Control the drivetrain.    
     if (driveAbsRotation) {
+        // If changed rotation.
         if (finalYAng || finalXAng) {
+            // Calculate the new absolute rotation for the robot.
             driveAbsAngle = units::radian_t(std::atan2(-finalYAng, finalXAng)) - 90_deg;
         }
 

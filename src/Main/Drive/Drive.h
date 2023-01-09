@@ -97,10 +97,13 @@ public:
      */
     enum ControlFlag {
         NONE          = 0,
-        FIELD_CENTRIC = 1 << 0,
-        VICE_GRIP     = 1 << 1,
-        BRICK         = 1 << 2,
-        RECORDING     = 1 << 3,
+        FIELD_CENTRIC = 1 << 0, // Field-relative control (forward is always field-forward).
+        VICE_GRIP     = 1 << 1, // Rotation locked to vision target.
+        BRICK         = 1 << 2, // All modules pointed towards the center.
+        RECORDING     = 1 << 3, // Recording the current movement and saving it when finished for future playback.
+        LOCK_X        = 1 << 4, // Lock X-axis drivetrain movement.
+        LOCK_Y        = 1 << 5, // Lock Y-axis drivetrain movement.
+        LOCK_ROT      = 1 << 6, // Lock rotation drivetrain movement.
     };
 
     /**
@@ -115,6 +118,15 @@ public:
      */
     void manualControlRelRotation(double xPct, double yPct, double angPct, unsigned flags);
 
+    /**
+     * Controls the speeds of the drivetrain using percentages of the max speed
+     * and the desired rotation. (The direction of the velocities is dependant on
+     * the control type). The angle is based on the robot's knowledge about it's
+     * position on the field.
+     * 
+     * Positive xPct   -> Move right,             Negative xPct   -> Move left.
+     * Positive yPct   -> Move forward,           Negative yPct   -> Move backward.
+    */
     void manualControlAbsRotation(double xPct, double yPct, units::radian_t angle, unsigned flags);
 
     /**
@@ -128,8 +140,7 @@ public:
     bool isFinished() const;
 
     /**
-     * Calibrates the IMU (Pauses the robot for 4 seconds while it
-     * calibrates).
+     * Calibrates the IMU (Pauses the robot for 4 seconds while it calibrates).
      */
     void calibrateIMU();
 
@@ -139,8 +150,8 @@ public:
     bool isIMUCalibrated();
 
     /**
-     * Resets the position and rotation of the drivetrain on the field
-     * to a specified pose.
+     * Resets the position and rotation of the drivetrain on the field to a
+     * specified pose.
      */
     void resetOdometry(frc::Pose2d pose = frc::Pose2d());
 
@@ -191,7 +202,8 @@ private:
     void record_state();
 
     /**
-     * Puts the drivetrain into brick mode (all modules turned towards the center).
+     * Puts the drivetrain into brick mode (all modules turned towards the
+     * center).
      */
     void makeBrick();
 
@@ -272,8 +284,8 @@ private:
     frc::SwerveDriveKinematics<4> kinematics { locations };
 
     /**
-     * The class that handles tracking the position of the robot on the
-     * field during the match.
+     * The class that handles tracking the position of the robot on the field
+     * during the match.
      */
     frc::SwerveDrivePoseEstimator<4> poseEstimator {
         kinematics,
@@ -285,18 +297,14 @@ private:
     };
 
     /**
-     * The slew rate limiter to control x and y acceleration and
-     * deceleration during manual control.
-     * 
-     * NOTE: (Waiting for WPILib update to add deceleration)
+     * The slew rate limiter to control x and y acceleration and deceleration
+     * during manual control.
      */
     frc::SlewRateLimiter<units::meters_per_second> driveRateLimiter { DRIVE_MANUAL_MAX_ACCEL, DRIVE_MANUAL_MAX_DECEL };
 
     /**
-     * The slew rate limiter to control angular acceleration and
-     * deceleration during manual control.
-     * 
-     * NOTE: (Waiting for WPILib update to add deceleration)
+     * The slew rate limiter to control angular acceleration and deceleration
+     * during manual control.
      */
     frc::SlewRateLimiter<units::radians_per_second> turnRateLimiter { DRIVE_MANUAL_MAX_ANG_ACCEL, DRIVE_MANUAL_MAX_ANG_DECEL };
 
@@ -366,6 +374,9 @@ private:
     frc::ChassisSpeeds chassisSpeeds { 0_mps, 0_mps, 0_rad_per_s };
     frc::Pose2d targetPose;
 
-    // CSV File on the RoboRIO to log drivetrain motion when running a trajectory.
+    /**
+     * CSV File on the RoboRIO to log drivetrain motion when running a
+     * trajectory.
+     */
     std::ofstream trajectoryMotionFile { MOTION_PROFILE_PATH };
 };
