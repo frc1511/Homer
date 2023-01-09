@@ -11,7 +11,16 @@ std::string Parser::getFile(std::filesystem::path path) {
   }
 
   std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  return str;
+
+  // Remove DOS line endings.
+  std::string new_str;
+  for (const char& c : str) {
+    if (c != '\r') {
+      new_str.push_back(c);
+    }
+  }
+
+  return new_str;
 }
 
 std::ptrdiff_t Parser::countWhile(Iter currIter, Iter endIter, ConditionFunc condFunc) {
