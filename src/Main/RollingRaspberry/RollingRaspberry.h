@@ -7,7 +7,6 @@
 #include <networktables/NetworkTable.h>
 #include <networktables/NetworkTableInstance.h>
 #include <networktables/NetworkTableListener.h>
-#include <networktables/StringArrayTopic.h>
 #include <frc/geometry/Pose2d.h>
 #include <frc/Timer.h>
 #include <units/time.h>
@@ -31,19 +30,17 @@ public:
     std::map<units::second_t, frc::Pose2d> getEstimatedRobotPoses();
 
 private:
-    void poseCallback(const nt::Event& event);
+    void poseCallback(std::string_view key, const nt::Event& event);
 
     // A network table used to communicate with the r-pi.
     std::shared_ptr<nt::NetworkTable> table;
 
-    bool init = false;
+    // Subtable containing pose estimates.
+    std::shared_ptr<nt::NetworkTable> posesSubtable;
 
     std::map<units::second_t, frc::Pose2d> poses;
 
-    units::second_t startRobotTimestamp;
-    units::second_t startPiTimestamp;
-
-    nt::StringArraySubscriber poseSubscriber;
+    // nt::StringArraySubscriber poseSubscriber;
     NT_Listener poseListener;
 
     std::mutex posesMutex;
