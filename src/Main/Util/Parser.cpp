@@ -67,8 +67,10 @@ double Parser::parseNumber(Iter& currIter, Iter endIter) {
   std::string intStr = parseWhile(currIter, endIter, [](char c) {
     return std::isdigit(c);
   });
+
+  bool do_more = *currIter == '.' || *currIter == 'e';
   
-  if (currIter == endIter || (*currIter != '.' && *currIter != 'e' && *currIter != 'E')) {
+  if (currIter == endIter || !do_more) {
     return std::stoi(intStr) * sign;
   }
 
@@ -81,7 +83,7 @@ double Parser::parseNumber(Iter& currIter, Iter endIter) {
       return std::isdigit(c);
     });
 
-    num = std::stod(fmt::format("{}.{}", intStr, ".", decStr)) * sign;
+    num = std::stod(fmt::format("{}.{}", intStr, decStr)) * sign;
   }
 
   // Parse the exponent part.
